@@ -1,32 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2015 - ROLI Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2016 - ROLI Ltd.
 
-   Permission to use, copy, modify, and/or distribute this software for any purpose with
-   or without fee is hereby granted, provided that the above copyright notice and this
-   permission notice appear in all copies.
+   Permission is granted to use this software under the terms of the ISC license
+   http://www.isc.org/downloads/software-support-policy/isc-license/
 
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
-   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
-   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
-   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+   Permission to use, copy, modify, and/or distribute this software for any
+   purpose with or without fee is hereby granted, provided that the above
+   copyright notice and this permission notice appear in all copies.
 
-   ------------------------------------------------------------------------------
+   THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+   FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT,
+   OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+   USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+   TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+   OF THIS SOFTWARE.
 
-   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
-   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
-   using any other modules, be sure to check that you also comply with their license.
+   -----------------------------------------------------------------------------
 
-   For more details, visit www.juce.com
+   To release a closed-source product which uses other parts of JUCE not
+   licensed under the ISC terms, commercial licenses are available: visit
+   www.juce.com for more information.
 
   ==============================================================================
 */
 
-//==============================================================================
 struct FallbackDownloadTask  : public URL::DownloadTask,
                                public Thread
 {
@@ -36,15 +37,18 @@ struct FallbackDownloadTask  : public URL::DownloadTask,
                           URL::DownloadTask::Listener* listenerToUse)
         : Thread ("DownloadTask thread"),
           fileStream (outputStreamToUse),
+          stream (streamToUse),
           bufferSize (bufferSizeToUse),
           buffer (bufferSize),
-          stream (streamToUse),
           listener (listenerToUse)
     {
+        jassert (fileStream != nullptr);
+        jassert (stream != nullptr);
+
         contentLength = stream->getTotalLength();
         httpCode      = stream->getStatusCode();
 
-        startThread ();
+        startThread();
     }
 
     ~FallbackDownloadTask()
@@ -57,7 +61,7 @@ struct FallbackDownloadTask  : public URL::DownloadTask,
     //==============================================================================
     void run() override
     {
-        while (! stream->isExhausted() && ! stream->isError() && ! threadShouldExit())
+        while (! (stream->isExhausted() || stream->isError() || threadShouldExit()))
         {
             if (listener != nullptr)
                 listener->progress (this, downloaded, contentLength);
@@ -79,7 +83,12 @@ struct FallbackDownloadTask  : public URL::DownloadTask,
             downloaded += actual;
         }
 
-        if (threadShouldExit() || (stream != nullptr && stream->isError()))
+        fileStream->flush();
+
+        if (threadShouldExit() || stream->isError())
+            error = true;
+
+        if (contentLength > 0 && downloaded < contentLength)
             error = true;
 
         finished = true;
@@ -89,11 +98,13 @@ struct FallbackDownloadTask  : public URL::DownloadTask,
     }
 
     //==============================================================================
-    ScopedPointer<FileOutputStream> fileStream;
-    size_t bufferSize;
+    const ScopedPointer<FileOutputStream> fileStream;
+    const ScopedPointer<WebInputStream> stream;
+    const size_t bufferSize;
     HeapBlock<char> buffer;
-    ScopedPointer<WebInputStream> stream;
-    URL::DownloadTask::Listener* listener;
+    URL::DownloadTask::Listener* const listener;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FallbackDownloadTask)
 };
 
 void URL::DownloadTask::Listener::progress (DownloadTask*, int64, int64) {}
@@ -347,9 +358,9 @@ URL URL::getChildURL (const String& subPath) const
     return u;
 }
 
-void URL::createHeadersAndPostData (String& headers, MemoryBlock& headersAndPostData) const
+void URL::createHeadersAndPostData (String& headers, MemoryBlock& postDataToWrite) const
 {
-    MemoryOutputStream data (headersAndPostData, false);
+    MemoryOutputStream data (postDataToWrite, false);
 
     if (filesToUpload.size() > 0)
     {

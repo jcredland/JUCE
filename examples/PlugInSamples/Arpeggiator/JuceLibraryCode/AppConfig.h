@@ -11,8 +11,7 @@
 
 */
 
-#ifndef __JUCE_APPCONFIG_NXASZK__
-#define __JUCE_APPCONFIG_NXASZK__
+#pragma once
 
 //==============================================================================
 // [BEGIN_USER_CODE_SECTION]
@@ -39,7 +38,7 @@
 
 //==============================================================================
 #ifndef    JUCE_STANDALONE_APPLICATION
- #ifdef JucePlugin_Build_Standalone
+ #if defined(JucePlugin_Name) && defined(JucePlugin_Build_Standalone)
   #define  JUCE_STANDALONE_APPLICATION JucePlugin_Build_Standalone
  #else
   #define  JUCE_STANDALONE_APPLICATION 0
@@ -79,6 +78,10 @@
  //#define JUCE_USE_ANDROID_OPENSLES
 #endif
 
+#ifndef    JUCE_USE_WINRT_MIDI
+ //#define JUCE_USE_WINRT_MIDI
+#endif
+
 //==============================================================================
 // juce_audio_formats flags:
 
@@ -107,6 +110,10 @@
 
 #ifndef    JUCE_FORCE_USE_LEGACY_PARAM_IDS
  //#define JUCE_FORCE_USE_LEGACY_PARAM_IDS
+#endif
+
+#ifndef    JUCE_USE_STUDIO_ONE_COMPATIBLE_PARAMETERS
+ //#define JUCE_USE_STUDIO_ONE_COMPATIBLE_PARAMETERS
 #endif
 
 //==============================================================================
@@ -157,6 +164,13 @@
 
 #ifndef    JUCE_ALLOW_STATIC_NULL_VARIABLES
  //#define JUCE_ALLOW_STATIC_NULL_VARIABLES
+#endif
+
+//==============================================================================
+// juce_events flags:
+
+#ifndef    JUCE_EXECUTE_APP_SUSPEND_ON_IOS_BACKGROUND_TASK
+ //#define JUCE_EXECUTE_APP_SUSPEND_ON_IOS_BACKGROUND_TASK
 #endif
 
 //==============================================================================
@@ -219,7 +233,6 @@
  //#define JUCE_USE_CAMERA
 #endif
 
-
 //==============================================================================
 // Audio plugin settings..
 
@@ -243,6 +256,9 @@
 #endif
 #ifndef  JucePlugin_Build_STANDALONE
  #define JucePlugin_Build_STANDALONE       0
+#endif
+#ifndef  JucePlugin_Enable_IAA
+ #define JucePlugin_Enable_IAA             0
 #endif
 #ifndef  JucePlugin_Name
  #define JucePlugin_Name                   "Arpeggiator"
@@ -346,5 +362,12 @@
 #ifndef  JucePlugin_AAXDisableMultiMono
  #define JucePlugin_AAXDisableMultiMono    0
 #endif
-
-#endif  // __JUCE_APPCONFIG_NXASZK__
+#ifndef  JucePlugin_IAAType
+ #define JucePlugin_IAAType                0x61757278 // 'aurx'
+#endif
+#ifndef  JucePlugin_IAASubType
+ #define JucePlugin_IAASubType             JucePlugin_PluginCode
+#endif
+#ifndef  JucePlugin_IAAName
+ #define JucePlugin_IAAName                "ROLI Ltd.: Arpeggiator"
+#endif

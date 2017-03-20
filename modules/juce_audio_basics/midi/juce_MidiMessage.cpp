@@ -2,22 +2,28 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2015 - ROLI Ltd.
+   Copyright (c) 2016 - ROLI Ltd.
 
-   Permission is granted to use this software under the terms of either:
-   a) the GPL v2 (or any later version)
-   b) the Affero GPL v3
+   Permission is granted to use this software under the terms of the ISC license
+   http://www.isc.org/downloads/software-support-policy/isc-license/
 
-   Details of these licenses can be found at: www.gnu.org/licenses
+   Permission to use, copy, modify, and/or distribute this software for any
+   purpose with or without fee is hereby granted, provided that the above
+   copyright notice and this permission notice appear in all copies.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+   FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT,
+   OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+   USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+   TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+   OF THIS SOFTWARE.
 
-   ------------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.juce.com for more information.
+   To release a closed-source product which uses other parts of JUCE not
+   licensed under the ISC terms, commercial licenses are available: visit
+   www.juce.com for more information.
 
   ==============================================================================
 */
@@ -38,6 +44,9 @@ namespace MidiHelpers
 //==============================================================================
 uint8 MidiMessage::floatValueToMidiByte (const float v) noexcept
 {
+    jassert (v >= 0 && v <= 1.0f);  // if your value is > 1, maybe you're passing an
+                                    // integer value to a float method by mistake?
+
     return MidiHelpers::validVelocity (roundToInt (v * 127.0f));
 }
 
@@ -216,7 +225,7 @@ MidiMessage::MidiMessage (const void* srcData, int sz, int& numBytesUsed, const 
             *dest = (uint8) byte;
             memcpy (dest + 1, src, (size_t) (size - 1));
 
-            numBytesUsed += numVariableLengthSysexBytes;  // (these aren't counted in the size)
+            numBytesUsed += (numVariableLengthSysexBytes + size);  // (these aren't counted in the size)
         }
         else if (byte == 0xff)
         {
@@ -227,6 +236,8 @@ MidiMessage::MidiMessage (const void* srcData, int sz, int& numBytesUsed, const 
             uint8* dest = allocateSpace (size);
             *dest = (uint8) byte;
             memcpy (dest + 1, src, (size_t) size - 1);
+
+            numBytesUsed += size;
         }
         else
         {
@@ -235,14 +246,14 @@ MidiMessage::MidiMessage (const void* srcData, int sz, int& numBytesUsed, const 
 
             if (size > 1)
             {
-                packedData.asBytes[1] = src[0];
+                packedData.asBytes[1] = (sz > 0 ? src[0] : 0);
 
                 if (size > 2)
-                    packedData.asBytes[2] = src[1];
+                    packedData.asBytes[2] = (sz > 1 ? src[1] : 0);
             }
-        }
 
-        numBytesUsed += size;
+            numBytesUsed += jmin (size, sz + 1);
+        }
     }
     else
     {
@@ -279,7 +290,6 @@ MidiMessage& MidiMessage::operator= (const MidiMessage& other)
     return *this;
 }
 
-#if JUCE_COMPILER_SUPPORTS_MOVE_SEMANTICS
 MidiMessage::MidiMessage (MidiMessage&& other) noexcept
    : timeStamp (other.timeStamp), size (other.size)
 {
@@ -295,7 +305,6 @@ MidiMessage& MidiMessage::operator= (MidiMessage&& other) noexcept
     other.size = 0;
     return *this;
 }
-#endif
 
 MidiMessage::~MidiMessage() noexcept
 {
@@ -780,7 +789,7 @@ double MidiMessage::getTempoMetaEventTickLength (const short timeFormat) const n
         {
             case 24: framesPerSecond = 24.0;   break;
             case 25: framesPerSecond = 25.0;   break;
-            case 29: framesPerSecond = 29.97;  break;
+            case 29: framesPerSecond = 30.0 * 1000.0 / 1001.0;  break;
             case 30: framesPerSecond = 30.0;   break;
             default: framesPerSecond = 30.0;   break;
         }

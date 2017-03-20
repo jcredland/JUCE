@@ -4,20 +4,26 @@
    This file is part of the JUCE library.
    Copyright (c) 2016 - ROLI Ltd.
 
-   Permission is granted to use this software under the terms of either:
-   a) the GPL v2 (or any later version)
-   b) the Affero GPL v3
+   Permission is granted to use this software under the terms of the ISC license
+   http://www.isc.org/downloads/software-support-policy/isc-license/
 
-   Details of these licenses can be found at: www.gnu.org/licenses
+   Permission to use, copy, modify, and/or distribute this software for any
+   purpose with or without fee is hereby granted, provided that the above
+   copyright notice and this permission notice appear in all copies.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+   FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT,
+   OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+   USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+   TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+   OF THIS SOFTWARE.
 
-   ------------------------------------------------------------------------------
+   -----------------------------------------------------------------------------
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.juce.com for more information.
+   To release a closed-source product which uses other parts of JUCE not
+   licensed under the ISC terms, commercial licenses are available: visit
+   www.juce.com for more information.
 
   ==============================================================================
 */
@@ -46,6 +52,7 @@ enum class MessageFromDevice
 {
     deviceTopology          = 0x01,
     packetACK               = 0x02,
+    firmwareUpdateACK       = 0x03,
 
     touchStart              = 0x10,
     touchMove               = 0x11,
@@ -56,7 +63,11 @@ enum class MessageFromDevice
     touchEndWithVelocity    = 0x15,
 
     controlButtonDown       = 0x20,
-    controlButtonUp         = 0x21
+    controlButtonUp         = 0x21,
+
+    programEventMessage     = 0x28,
+
+    logMessage              = 0x30
 };
 
 /** Messages that the host may send to a device. */
@@ -64,7 +75,8 @@ enum class MessageFromHost
 {
     deviceCommandMessage    = 0x01,
     sharedDataChange        = 0x02,
-    programEventMessage     = 0x03
+    programEventMessage     = 0x03,
+    firmwareUpdatePacket    = 0x04
 };
 
 
@@ -218,15 +230,18 @@ using ByteCountMany          = IntegerWithBitSize<8>;
 using ByteValue              = IntegerWithBitSize<8>;
 using ByteSequenceContinues  = IntegerWithBitSize<1>;
 
-static constexpr uint32 numProgramMessageInts = 2;
+using FirmwareUpdateACKCode    = IntegerWithBitSize<7>;
+using FirmwareUpdatePacketSize = IntegerWithBitSize<7>;
+
+static constexpr uint32 numProgramMessageInts = 3;
 
 static constexpr uint32 apiModeHostPingTimeoutMs = 5000;
 
-static constexpr uint32 padBlockProgramAndHeapSize = 3200;
+static constexpr uint32 padBlockProgramAndHeapSize = 7200;
 static constexpr uint32 padBlockStackSize = 800;
 
-static constexpr uint32 controlBlockProgramAndHeapSize = 1500;
-static constexpr uint32 controlBlockStackSize = 500;
+static constexpr uint32 controlBlockProgramAndHeapSize = 3000;
+static constexpr uint32 controlBlockStackSize = 800;
 
 
 //==============================================================================
@@ -245,6 +260,8 @@ enum BitSizes
     programEventMessage      = MessageType::bits + 32 * numProgramMessageInts,
     packetACK                = MessageType::bits + PacketCounter::bits,
 
+    firmwareUpdateACK        = MessageType::bits + FirmwareUpdateACKCode::bits,
+
     controlButtonMessage     = typeDeviceAndTime + ControlButtonID::bits,
 };
 
@@ -252,11 +269,62 @@ enum BitSizes
 // These are the littlefoot functions provided for use in BLOCKS programs
 static constexpr const char* ledProgramLittleFootFunctions[] =
 {
+    "min/iii",
+    "min/fff",
+    "max/iii",
+    "max/fff",
+    "clamp/iiii",
+    "clamp/ffff",
+    "abs/ii",
+    "abs/ff",
+    "map/ffffff",
+    "map/ffff",
+    "mod/iii",
+    "getRandomFloat/f",
+    "getRandomInt/ii",
+    "getMillisecondCounter/i",
+    "getFirmwareVersion/i",
+    "log/vi",
+    "logHex/vi",
+    "getTimeInCurrentFunctionCall/i",
+    "getBatteryLevel/f",
+    "isBatteryCharging/b",
+    "isMasterBlock/b",
+    "isConnectedToHost/b",
+    "setStatusOverlayActive/vb",
+    "getNumBlocksInTopology/i",
+    "getBlockIDForIndex/ii",
+    "getBlockIDOnPort/ii",
+    "getPortToMaster/i",
+    "getBlockTypeForID/ii",
+    "sendMessageToBlock/viiii",
+    "sendMessageToHost/viii",
     "makeARGB/iiiii",
     "blendARGB/iii",
-    "setLED/viii",
-    "blendLED/viii",
+    "fillPixel/viii",
+    "blendPixel/viii",
     "fillRect/viiiii",
-    "enableDebug/viii",
+    "blendRect/viiiii",
+    "blendGradientRect/viiiiiiii",
+    "addPressurePoint/vifff",
+    "drawPressureMap/v",
+    "fadePressureMap/v",
+    "drawNumber/viiii",
+    "clearDisplay/v",
+    "clearDisplay/vi",
+    "sendMIDI/vi",
+    "sendMIDI/vii",
+    "sendMIDI/viii",
+    "sendNoteOn/viii",
+    "sendNoteOff/viii",
+    "sendAftertouch/viii",
+    "sendCC/viii",
+    "sendPitchBend/vii",
+    "sendChannelPressure/vii",
+    "setChannelRange/vbii",
+    "assignChannel/ii",
+    "deassignChannel/vii",
+    "getControlChannel/i",
+    "useMPEDuplicateFilter/vb",
     nullptr
 };

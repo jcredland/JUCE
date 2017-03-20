@@ -1,6 +1,4 @@
-
-#ifndef MAINCOMPONENT_H_INCLUDED
-#define MAINCOMPONENT_H_INCLUDED
+#pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "Audio.h"
@@ -74,6 +72,9 @@ class MainComponent   : public Component,
                         public TopologySource::Listener,
                         private TouchSurface::Listener,
                         private ControlButton::Listener,
+                       #if JUCE_IOS
+                        private Button::Listener,
+                       #endif
                         private Timer
 {
 public:
@@ -83,6 +84,12 @@ public:
 
         // Register MainContentComponent as a listener to the PhysicalTopologySource object
         topologySource.addListener (this);
+
+       #if JUCE_IOS
+        connectButton.setButtonText ("Connect");
+        connectButton.addListener (this);
+        addAndMakeVisible (connectButton);
+       #endif
     };
 
     ~MainComponent()
@@ -98,7 +105,12 @@ public:
                     getLocalBounds(), Justification::centred, false);
     }
 
-    void resized() override {}
+    void resized() override
+    {
+       #if JUCE_IOS
+        connectButton.setBounds (getRight() - 100, 20, 80, 30);
+       #endif
+    }
 
     /** Overridden from TopologySource::Listener, called when the topology changes */
     void topologyChanged() override
@@ -133,7 +145,7 @@ public:
                     scaleX = static_cast<float> (grid->getNumColumns() - 1) / activeBlock->getWidth();
                     scaleY = static_cast<float> (grid->getNumRows() - 1)    / activeBlock->getHeight();
 
-                    setLEDProgram (grid);
+                    setLEDProgram (*activeBlock);
                 }
 
                 break;
@@ -215,8 +227,16 @@ private:
             currentMode = waveformSelectionMode;
 
         // Set the LEDGrid program to the new mode
-        setLEDProgram (activeBlock->getLEDGrid());
+        setLEDProgram (*activeBlock);
     }
+
+   #if JUCE_IOS
+    void buttonClicked (Button* b) override
+    {
+        if (b == &connectButton)
+            BluetoothMidiDevicePairingDialogue::open();
+    }
+   #endif
 
     /** Clears the old touch times */
     void clearOldTouchTimes (const Time now)
@@ -239,15 +259,15 @@ private:
     }
 
     /** Sets the LEDGrid Program for the selected mode */
-    void setLEDProgram (LEDGrid* grid)
+    void setLEDProgram (Block& block)
     {
         if (currentMode == waveformSelectionMode)
         {
             // Create a new WaveshapeProgram for the LEDGrid
-            waveshapeProgram = new WaveshapeProgram (*grid);
+            waveshapeProgram = new WaveshapeProgram (block);
 
             // Set the LEDGrid program
-            grid->setProgram (waveshapeProgram);
+            block.setProgram (waveshapeProgram);
 
             // Initialise the program
             waveshapeProgram->setWaveshapeType (static_cast<uint8> (waveshapeMode));
@@ -256,10 +276,16 @@ private:
         else if (currentMode == playMode)
         {
             // Create a new DrumPadGridProgram for the LEDGrid
-            gridProgram = new DrumPadGridProgram (*grid);
+            gridProgram = new DrumPadGridProgram (block);
 
             // Set the LEDGrid program
-            grid->setProgram (gridProgram);
+            auto error = block.setProgram (gridProgram);
+
+            if (error.failed())
+            {
+                DBG (error.getErrorMessage());
+                jassertfalse;
+            }
 
             // Setup the grid layout
             gridProgram->setGridFills (layout.numColumns,
@@ -299,8 +325,10 @@ private:
     bool allowTouch = true;
 
     //==============================================================================
+   #if JUCE_IOS
+    TextButton connectButton;
+   #endif
+
+    //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
-
-
-#endif  // MAINCOMPONENT_H_INCLUDED

@@ -478,7 +478,8 @@ void CoreGraphicsContext::drawImage (const Image& sourceImage, const AffineTrans
 {
     const int iw = sourceImage.getWidth();
     const int ih = sourceImage.getHeight();
-    CGImageRef image = CoreGraphicsImage::getCachedImageRef (sourceImage, rgbColourSpace);
+    CGImageRef image = CoreGraphicsImage::getCachedImageRef (sourceImage, sourceImage.getFormat() == Image::PixelFormat::SingleChannel ? greyColourSpace
+                                                                                                                                       : rgbColourSpace);
 
     CGContextSaveGState (context);
     CGContextSetAlpha (context, state->fillType.getOpacity());
@@ -875,7 +876,6 @@ Image juce_loadWithCoreImage (InputStream& input)
 }
 #endif
 
-#if JUCE_MAC
 Image juce_createImageFromCIImage (CIImage*, int, int);
 Image juce_createImageFromCIImage (CIImage* im, int w, int h)
 {
@@ -903,4 +903,16 @@ CGContextRef juce_getImageContext (const Image& image)
     return 0;
 }
 
+#if JUCE_IOS
+Image juce_createImageFromUIImage (UIImage* img)
+{
+    CGImageRef image = [img CGImage];
+
+    Image retval (Image::ARGB, (int) CGImageGetWidth (image), (int) CGImageGetHeight (image), true);
+    CGContextRef ctx = juce_getImageContext (retval);
+
+    CGContextDrawImage (ctx, CGRectMake (0.0f, 0.0f, CGImageGetWidth (image), CGImageGetHeight (image)), image);
+
+    return retval;
+}
 #endif

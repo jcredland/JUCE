@@ -1,27 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2015 - ROLI Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2016 - ROLI Ltd.
 
-   Permission to use, copy, modify, and/or distribute this software for any purpose with
-   or without fee is hereby granted, provided that the above copyright notice and this
-   permission notice appear in all copies.
+   Permission is granted to use this software under the terms of the ISC license
+   http://www.isc.org/downloads/software-support-policy/isc-license/
 
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
-   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
-   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
-   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+   Permission to use, copy, modify, and/or distribute this software for any
+   purpose with or without fee is hereby granted, provided that the above
+   copyright notice and this permission notice appear in all copies.
 
-   ------------------------------------------------------------------------------
+   THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+   FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT,
+   OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+   USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+   TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+   OF THIS SOFTWARE.
 
-   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
-   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
-   using any other modules, be sure to check that you also comply with their license.
+   -----------------------------------------------------------------------------
 
-   For more details, visit www.juce.com
+   To release a closed-source product which uses other parts of JUCE not
+   licensed under the ISC terms, commercial licenses are available: visit
+   www.juce.com for more information.
 
   ==============================================================================
 */
@@ -152,14 +154,14 @@ namespace AndroidStatsHelpers
     DECLARE_JNI_CLASS (SystemClass, "java/lang/System");
     #undef JNI_CLASS_MEMBERS
 
-    String getSystemProperty (const String& name)
+    static inline String getSystemProperty (const String& name)
     {
         return juceString (LocalRef<jstring> ((jstring) getEnv()->CallStaticObjectMethod (SystemClass,
                                                                                           SystemClass.getProperty,
                                                                                           javaString (name).get())));
     }
 
-    String getLocaleValue (bool isRegion)
+    static inline String getLocaleValue (bool isRegion)
     {
         return juceString (LocalRef<jstring> ((jstring) getEnv()->CallStaticObjectMethod (JuceAppActivity,
                                                                                           JuceAppActivity.getLocaleValue,
@@ -170,7 +172,7 @@ namespace AndroidStatsHelpers
     DECLARE_JNI_CLASS (BuildClass, "android/os/Build");
     #undef JNI_CLASS_MEMBERS
 
-    String getAndroidOsBuildValue (const char* fieldName)
+    static inline String getAndroidOsBuildValue (const char* fieldName)
     {
         return juceString (LocalRef<jstring> ((jstring) getEnv()->GetStaticObjectField (
                             BuildClass, getEnv()->GetStaticFieldID (BuildClass, fieldName, "Ljava/lang/String;"))));
@@ -208,9 +210,25 @@ String SystemStats::getCpuVendor()
     return AndroidStatsHelpers::getSystemProperty ("os.arch");
 }
 
+String SystemStats::getCpuModel()
+{
+    return readPosixConfigFileValue ("/proc/cpuinfo", "Hardware");
+}
+
 int SystemStats::getCpuSpeedInMegaherz()
 {
-    return 0; // TODO
+    int maxFreqKHz = 0;
+
+    for (int i = 0; i < getNumCpus(); ++i)
+    {
+        int freqKHz = File ("/sys/devices/system/cpu/cpu" + String(i) + "/cpufreq/cpuinfo_max_freq")
+                        .loadFileAsString()
+                        .getIntValue();
+
+        maxFreqKHz = jmax (freqKHz, maxFreqKHz);
+    }
+
+    return maxFreqKHz / 1000;
 }
 
 int SystemStats::getMemorySizeInMegabytes()
@@ -219,7 +237,7 @@ int SystemStats::getMemorySizeInMegabytes()
     struct sysinfo sysi;
 
     if (sysinfo (&sysi) == 0)
-        return (sysi.totalram * sysi.mem_unit / (1024 * 1024));
+        return (static_cast<int> (sysi.totalram * sysi.mem_unit) / (1024 * 1024));
    #endif
 
     return 0;
@@ -227,7 +245,7 @@ int SystemStats::getMemorySizeInMegabytes()
 
 int SystemStats::getPageSize()
 {
-    return sysconf (_SC_PAGESIZE);
+    return static_cast<int> (sysconf (_SC_PAGESIZE));
 }
 
 //==============================================================================
@@ -264,7 +282,7 @@ String SystemStats::getDisplayLanguage() { return getUserLanguage() + "-" + getU
 //==============================================================================
 void CPUInformation::initialise() noexcept
 {
-    numCpus = jmax ((int) 1, (int) sysconf (_SC_NPROCESSORS_ONLN));
+    numPhysicalCPUs = numLogicalCPUs = jmax ((int) 1, (int) sysconf (_SC_NPROCESSORS_ONLN));
 }
 
 //==============================================================================
@@ -273,7 +291,7 @@ uint32 juce_millisecondsSinceStartup() noexcept
     timespec t;
     clock_gettime (CLOCK_MONOTONIC, &t);
 
-    return t.tv_sec * 1000 + t.tv_nsec / 1000000;
+    return static_cast<uint32> (t.tv_sec) * 1000U + static_cast<uint32> (t.tv_nsec) / 1000000U;
 }
 
 int64 Time::getHighResolutionTicks() noexcept

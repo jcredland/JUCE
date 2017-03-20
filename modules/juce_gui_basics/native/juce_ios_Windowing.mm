@@ -37,19 +37,30 @@ Array<AppInactivityCallback*> appBecomingInactiveCallbacks;
 
 @interface JuceAppStartupDelegate : NSObject <UIApplicationDelegate>
 {
+    UIBackgroundTaskIdentifier appSuspendTask;
 }
 
 @property (strong, nonatomic) UIWindow *window;
+- (id)init;
 - (void) applicationDidFinishLaunching: (UIApplication*) application;
 - (void) applicationWillTerminate: (UIApplication*) application;
 - (void) applicationDidEnterBackground: (UIApplication*) application;
 - (void) applicationWillEnterForeground: (UIApplication*) application;
 - (void) applicationDidBecomeActive: (UIApplication*) application;
 - (void) applicationWillResignActive: (UIApplication*) application;
-
+- (void) application: (UIApplication*) application handleEventsForBackgroundURLSession: (NSString*)identifier
+   completionHandler: (void (^)(void))completionHandler;
 @end
 
 @implementation JuceAppStartupDelegate
+
+- (id)init
+{
+    self = [super init];
+    appSuspendTask = UIBackgroundTaskInvalid;
+
+    return self;
+}
 
 - (void) applicationDidFinishLaunching: (UIApplication*) application
 {
@@ -75,10 +86,31 @@ Array<AppInactivityCallback*> appBecomingInactiveCallbacks;
 
 - (void) applicationDidEnterBackground: (UIApplication*) application
 {
-    ignoreUnused (application);
-
     if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
+    {
+       #if JUCE_EXECUTE_APP_SUSPEND_ON_BACKGROUND_TASK
+        appSuspendTask = [application beginBackgroundTaskWithName:@"JUCE Suspend Task" expirationHandler:^{
+            if (appSuspendTask != UIBackgroundTaskInvalid)
+            {
+                [application endBackgroundTask:appSuspendTask];
+                appSuspendTask = UIBackgroundTaskInvalid;
+            }
+        }];
+
+        MessageManager::callAsync ([self,application,app] ()
+                                   {
+                                       app->suspended();
+                                       if (appSuspendTask != UIBackgroundTaskInvalid)
+                                       {
+                                           [application endBackgroundTask:appSuspendTask];
+                                           appSuspendTask = UIBackgroundTaskInvalid;
+                                       }
+                                   });
+       #else
+        ignoreUnused (application);
         app->suspended();
+       #endif
+    }
 }
 
 - (void) applicationWillEnterForeground: (UIApplication*) application
@@ -102,6 +134,14 @@ Array<AppInactivityCallback*> appBecomingInactiveCallbacks;
 
     for (int i = appBecomingInactiveCallbacks.size(); --i >= 0;)
         appBecomingInactiveCallbacks.getReference(i)->appBecomingInactive();
+}
+
+- (void) application: (UIApplication*) application handleEventsForBackgroundURLSession: (NSString*)identifier
+   completionHandler: (void (^)(void))completionHandler
+{
+    ignoreUnused (application);
+    URL::DownloadTask::juce_iosURLSessionNotify (nsStringToJuce (identifier));
+    completionHandler();
 }
 
 @end
@@ -320,6 +360,20 @@ int JUCE_CALLTYPE NativeMessageBox::showYesNoCancelBox (AlertWindow::AlertIconTy
     return 0;
 }
 
+int JUCE_CALLTYPE NativeMessageBox::showYesNoBox (AlertWindow::AlertIconType /*iconType*/,
+                                                  const String& title, const String& message,
+                                                  Component* /*associatedComponent*/,
+                                                  ModalComponentManager::Callback* callback)
+{
+    ScopedPointer<iOSMessageBox> mb (new iOSMessageBox (title, message, @"No", @"Yes", nil, callback, callback != nullptr));
+
+    if (callback == nullptr)
+        return mb->getResult();
+
+    mb.release();
+    return 0;
+}
+
 //==============================================================================
 bool DragAndDropContainer::performExternalDragDropOfFiles (const StringArray&, bool)
 {
@@ -375,7 +429,12 @@ String SystemClipboard::getTextFromClipboard()
 //==============================================================================
 bool MouseInputSource::SourceList::addSource()
 {
-    addSource (sources.size(), false);
+    addSource (sources.size(), MouseInputSource::InputSourceType::touch);
+    return true;
+}
+
+bool MouseInputSource::SourceList::canUseTouch()
+{
     return true;
 }
 

@@ -1,27 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2015 - ROLI Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2016 - ROLI Ltd.
 
-   Permission to use, copy, modify, and/or distribute this software for any purpose with
-   or without fee is hereby granted, provided that the above copyright notice and this
-   permission notice appear in all copies.
+   Permission is granted to use this software under the terms of the ISC license
+   http://www.isc.org/downloads/software-support-policy/isc-license/
 
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
-   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
-   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
-   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+   Permission to use, copy, modify, and/or distribute this software for any
+   purpose with or without fee is hereby granted, provided that the above
+   copyright notice and this permission notice appear in all copies.
 
-   ------------------------------------------------------------------------------
+   THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+   FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT,
+   OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+   USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+   TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+   OF THIS SOFTWARE.
 
-   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
-   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
-   using any other modules, be sure to check that you also comply with their license.
+   -----------------------------------------------------------------------------
 
-   For more details, visit www.juce.com
+   To release a closed-source product which uses other parts of JUCE not
+   licensed under the ISC terms, commercial licenses are available: visit
+   www.juce.com for more information.
 
   ==============================================================================
 */
@@ -53,44 +55,34 @@ bool SystemStats::isOperatingSystem64Bit()
 }
 
 //==============================================================================
-namespace LinuxStatsHelpers
+static inline String getCpuInfo (const char* key)
 {
-    String getConfigFileValue (const char* file, const char* const key)
-    {
-        StringArray lines;
-        File (file).readLines (lines);
-
-        for (int i = lines.size(); --i >= 0;) // (NB - it's important that this runs in reverse order)
-            if (lines[i].upToFirstOccurrenceOf (":", false, false).trim().equalsIgnoreCase (key))
-                return lines[i].fromFirstOccurrenceOf (":", false, false).trim();
-
-        return String();
-    }
-
-    String getCpuInfo (const char* key)
-    {
-        return getConfigFileValue ("/proc/cpuinfo", key);
-    }
+    return readPosixConfigFileValue ("/proc/cpuinfo", key);
 }
 
 String SystemStats::getDeviceDescription()
 {
-    return LinuxStatsHelpers::getCpuInfo ("Hardware");
+    return getCpuInfo ("Hardware");
 }
 
 String SystemStats::getCpuVendor()
 {
-    String v (LinuxStatsHelpers::getCpuInfo ("vendor_id"));
+    auto v = getCpuInfo ("vendor_id");
 
     if (v.isEmpty())
-        v = LinuxStatsHelpers::getCpuInfo ("model name");
+        v = getCpuInfo ("model name");
 
     return v;
 }
 
+String SystemStats::getCpuModel()
+{
+    return getCpuInfo ("model name");
+}
+
 int SystemStats::getCpuSpeedInMegaherz()
 {
-    return roundToInt (LinuxStatsHelpers::getCpuInfo ("cpu MHz").getFloatValue());
+    return roundToInt (getCpuInfo ("cpu MHz").getFloatValue());
 }
 
 int SystemStats::getMemorySizeInMegabytes()
@@ -149,7 +141,7 @@ String SystemStats::getDisplayLanguage() { return getUserLanguage() + "-" + getU
 //==============================================================================
 void CPUInformation::initialise() noexcept
 {
-    const String flags (LinuxStatsHelpers::getCpuInfo ("flags"));
+    auto flags = getCpuInfo ("flags");
     hasMMX   = flags.contains ("mmx");
     hasSSE   = flags.contains ("sse");
     hasSSE2  = flags.contains ("sse2");
@@ -161,7 +153,13 @@ void CPUInformation::initialise() noexcept
     hasAVX   = flags.contains ("avx");
     hasAVX2  = flags.contains ("avx2");
 
-    numCpus = LinuxStatsHelpers::getCpuInfo ("processor").getIntValue() + 1;
+    numLogicalCPUs  = getCpuInfo ("processor").getIntValue() + 1;
+
+    // Assume CPUs in all sockets have the same number of cores
+    numPhysicalCPUs = getCpuInfo ("cpu cores").getIntValue() * (getCpuInfo ("physical id").getIntValue() + 1);
+
+    if (numPhysicalCPUs <= 0)
+        numPhysicalCPUs = numLogicalCPUs;
 }
 
 //==============================================================================
@@ -205,7 +203,7 @@ JUCE_API bool JUCE_CALLTYPE juce_isRunningUnderDebugger() noexcept
    #if JUCE_BSD
     return false;
    #else
-    return LinuxStatsHelpers::getConfigFileValue ("/proc/self/status", "TracerPid")
+    return readPosixConfigFileValue ("/proc/self/status", "TracerPid")
              .getIntValue() > 0;
    #endif
 }
