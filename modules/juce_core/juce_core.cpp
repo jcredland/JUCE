@@ -117,6 +117,9 @@
  #include <android/log.h>
 #endif
 
+#if JCF_USE_CURL_EVERYWHERE
+#include <curl/curl.h>
+#endif
 #undef check
 
 //==============================================================================
@@ -202,7 +205,11 @@ namespace juce
 //==============================================================================
 #if JUCE_MAC || JUCE_IOS
 #include "native/juce_mac_Files.mm"
+#ifdef JCF_USE_CURL_EVERYWHERE
+#include "native/juce_curl_Network.cpp"
+#else
 #include "native/juce_mac_Network.mm"
+#endif
 #include "native/juce_mac_Strings.mm"
 #include "native/juce_mac_SystemStats.mm"
 #include "native/juce_mac_Threads.mm"
@@ -210,7 +217,11 @@ namespace juce
 //==============================================================================
 #elif JUCE_WINDOWS
 #include "native/juce_win32_Files.cpp"
+#ifdef JCF_USE_CURL_EVERYWHERE
+#include "native/juce_curl_Network.cpp"
+#else
 #include "native/juce_win32_Network.cpp"
+#endif
 #include "native/juce_win32_Registry.cpp"
 #include "native/juce_win32_SystemStats.cpp"
 #include "native/juce_win32_Threads.cpp"
