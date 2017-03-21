@@ -117,7 +117,7 @@
  #include <android/log.h>
 #endif
 
-#if JCF_USE_CURL_EVERYWHERE
+#ifdef JCF_USE_CURL_EVERYWHERE
 #include <curl/curl.h>
 #endif
 #undef check
@@ -217,11 +217,11 @@ namespace juce
 //==============================================================================
 #elif JUCE_WINDOWS
 #include "native/juce_win32_Files.cpp"
-#ifdef JCF_USE_CURL_EVERYWHERE
-#include "native/juce_curl_Network.cpp"
-#else
+//#ifdef JCF_USE_CURL_EVERYWHERE
+//#include "native/juce_curl_Network.cpp"
+//#else
 #include "native/juce_win32_Network.cpp"
-#endif
+//#endif
 #include "native/juce_win32_Registry.cpp"
 #include "native/juce_win32_SystemStats.cpp"
 #include "native/juce_win32_Threads.cpp"
