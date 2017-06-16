@@ -139,6 +139,13 @@ class JUCE_API WebInputStream : public InputStream
     /** Returns true if there was an error during the connection attempt. */
     bool isError() const;
 
+    /** 
+    Returns information on the error, if any, that was encountered when processing 
+    the stream.  IF multiple errors occured this will only return information on the
+    first error.
+    */
+    Result getFirstError() const; 
+
     /** Will cancel a blocking read and prevent any subsequent connection attempts. */
     void cancel();
 

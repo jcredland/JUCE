@@ -65,6 +65,14 @@ public:
     StringPairArray getResponseHeaders() const                            { return responseHeaders; }
     int getStatusCode() const                                             { return statusCode; }
 
+	Result getFirstError() const
+    {
+		if (osErrors.isNotEmpty())
+            return Result::fail("windows error(s) " + osErrors);
+
+		return Result::ok();
+    }
+
     //==============================================================================
     bool connect (WebInputStream::Listener* listener)
     {
@@ -108,7 +116,10 @@ public:
                     }
 
                     if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+                    {
+						checkForErrors("HttpQueryInfo");
                         return false;
+                    }
 
                     bufferSizeBytes += 4096;
                 }
@@ -144,6 +155,10 @@ public:
                         }
                     }
                 }
+				else
+				{
+					checkForErrors("HttpQueryInfo");
+				}
 
                 responseHeaders.addArray (dataHeaders);
             }
@@ -199,8 +214,10 @@ public:
         }
     }
 
-    bool setPosition (int64 wantedPos)
+    bool setPosition (int64 wantedPos) 
     {
+        jassert(wantedPos <= std::numeric_limits<uint32>::max());// note despite providing a 64 bit position this function as written only works for 32bit positions!!
+
         if (isError())
             return false;
 
@@ -208,6 +225,12 @@ public:
         {
             finished = false;
             position = (int64) InternetSetFilePointer (request, (LONG) wantedPos, 0, FILE_BEGIN, 0);
+
+            if (position == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+            {
+                checkForErrors("InternetSetFilePointer");
+                return false;
+            }
 
             if (position == wantedPos)
                 return true;
@@ -235,8 +258,25 @@ private:
     HINTERNET connection = 0, request = 0;
     String headers;
     MemoryBlock postData;
+
     int64 position = 0;
     bool finished = false;
+
+	void checkForErrors(const String & functionWithError)
+	{
+		auto r = GetLastError();
+
+        if (r != 0)
+        {
+            if (osErrors.isNotEmpty())
+                osErrors += " ";
+
+            osErrors += functionWithError + " returned " + String(r);
+        }
+	}
+
+    String osErrors;
+
     const bool isPost;
     int timeOutMs = 0;
     String httpRequestCmd;
@@ -293,6 +333,8 @@ private:
 
             if (InternetCrackUrl (address.toWideCharPointer(), 0, 0, &uc))
                 openConnection (uc, sessionHandle, address, listener);
+			else
+				checkForErrors("InternetOpen"); 
         }
     }
 
@@ -326,16 +368,25 @@ private:
                                                              isFtp ? (DWORD) INTERNET_SERVICE_FTP
                                                                    : (DWORD) INTERNET_SERVICE_HTTP,
                                                              0, 0);
+		checkForErrors("InternetConnect"); 
         }
 
-        if (connection != 0)
+        if (connection != nullptr)
         {
             if (isFtp)
+            {
                 request = FtpOpenFile (connection, uc.lpszUrlPath, GENERIC_READ,
                                        FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_NEED_FILE, 0);
+
+                checkForErrors("FtpOpenFile");
+            }
             else
+            {
                 openHTTPConnection (uc, address, listener);
+            }
         }
+
+		checkForErrors("InternetConnect/FtpOpenFile"); 
     }
 
     void applyTimeout (HINTERNET sessionHandle, const DWORD option)
@@ -347,6 +398,7 @@ private:
     {
         const TCHAR* mimeTypes[] = { _T("*/*"), nullptr };
 
+
         DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_COOKIES
                         | INTERNET_FLAG_NO_AUTO_REDIRECT;
 
@@ -354,21 +406,24 @@ private:
             flags |= INTERNET_FLAG_SECURE;  // (this flag only seems necessary if the OS is running IE6 -
                                             //  IE7 seems to automatically work out when it's https)
 
+
         {
             const ScopedLock lock (createConnectionLock);
 
             request = hasBeenCancelled ? 0
                                        : HttpOpenRequest (connection, httpRequestCmd.toWideCharPointer(),
                                                           uc.lpszUrlPath, 0, 0, mimeTypes, flags, 0);
+
+		checkForErrors("HttpOpenRequest");
         }
 
-        if (request != 0)
+        if (request != nullptr)
         {
             INTERNET_BUFFERS buffers = { 0 };
             buffers.dwStructSize = sizeof (INTERNET_BUFFERS);
             buffers.lpcszHeader = headers.toWideCharPointer();
-            buffers.dwHeadersLength = (DWORD) headers.length();
-            buffers.dwBufferTotal = (DWORD) postData.getSize();
+            buffers.dwHeadersLength = DWORD(headers.length());
+            buffers.dwBufferTotal = DWORD(postData.getSize());
 
             if (HttpSendRequestEx (request, &buffers, 0, HSR_INITIATE, 0))
             {
@@ -376,21 +431,27 @@ private:
 
                 for (;;)
                 {
-                    const int bytesToDo = jmin (1024, (int) postData.getSize() - bytesSent);
+                    const int bytesToDo = jmin (1024, int(postData.getSize()) - bytesSent);
                     DWORD bytesDone = 0;
 
                     if (bytesToDo > 0
                          && ! InternetWriteFile (request,
                                                  static_cast<const char*> (postData.getData()) + bytesSent,
-                                                 (DWORD) bytesToDo, &bytesDone))
+                                                 DWORD(bytesToDo), &bytesDone))
                     {
+						checkForErrors("InternetWriteFile"); // InternetWriteFile
                         break;
                     }
 
-                    if (bytesToDo == 0 || (int) bytesDone < bytesToDo)
+					checkForErrors("InternetWriteFile"); // InternetWriteFile
+
+
+                    if (bytesToDo == 0 || int(bytesDone) < bytesToDo)
                     {
-                        if (HttpEndRequest (request, 0, 0, 0))
+                        if (HttpEndRequest (request, nullptr, 0, 0))
                             return;
+
+						checkForErrors("HttpEndRequest"); 
 
                         break;
                     }
@@ -398,11 +459,16 @@ private:
                     bytesSent += bytesDone;
 
                     if (listener != nullptr
-                          && ! listener->postDataSendProgress (owner, bytesSent, (int) postData.getSize()))
+                          && ! listener->postDataSendProgress (owner, bytesSent, int(postData.getSize())))
                         break;
                 }
             }
+			else
+			{
+				checkForErrors("HttpSendRequestEx"); // HttpSendRequestEx
+			}
         }
+
 
         closeConnection();
     }

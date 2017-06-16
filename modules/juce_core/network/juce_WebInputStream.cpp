@@ -40,6 +40,7 @@ WebInputStream& WebInputStream::withNumRedirectsToFollow (int num)             {
 StringPairArray WebInputStream::getRequestHeaders() const                      { return pimpl->getRequestHeaders(); }
 StringPairArray WebInputStream::getResponseHeaders()                           { connect (nullptr); return pimpl->getResponseHeaders(); }
 bool WebInputStream::isError() const                                           { return pimpl->isError(); }
+Result WebInputStream::getFirstError() const                                        { return pimpl->getFirstError(); }
 void WebInputStream::cancel()                                                  { pimpl->cancel(); }
 bool WebInputStream::isExhausted()                                             { return pimpl->isExhausted(); }
 int64 WebInputStream::getPosition()                                            { return pimpl->getPosition(); }
