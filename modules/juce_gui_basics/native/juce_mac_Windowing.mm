@@ -24,6 +24,7 @@
 
 } // namespace juce
 
+
 @interface NSDraggingSourceHelper : NSObject <NSDraggingSource>
 {
 }
@@ -38,6 +39,9 @@
 }
 
 @end
+
+#include "../../juce_core/native/juce_osx_ObjCHelpers.h"
+
 
 namespace juce {
 
@@ -250,6 +254,26 @@ bool DragAndDropContainer::performExternalDragDropOfText (const String& text)
     return false;
 }
 
+class NSDraggingSourceHelper   : public ObjCClass <NSObject <NSDraggingSource>>
+{
+public:
+    NSDraggingSourceHelper()
+        : ObjCClass <NSObject <NSDraggingSource>> ("JUCENSDraggingSourceHelper_")
+    {
+        addMethod (@selector (draggingSession:sourceOperationMaskForDraggingContext:), sourceOperationMaskForDraggingContext, "c@:@@");
+
+        registerClass();
+    }
+
+private:
+    static NSDragOperation sourceOperationMaskForDraggingContext (id, SEL, NSDraggingSession*, NSDraggingContext)
+    {
+        return NSDragOperationCopy;
+    }
+};
+
+static NSDraggingSourceHelper draggingSourceHelper;
+
 bool DragAndDropContainer::performExternalDragDropOfFiles (const StringArray& files, bool /*canMoveFiles*/)
 {
     if (files.isEmpty())
@@ -279,7 +303,11 @@ bool DragAndDropContainer::performExternalDragDropOfFiles (const StringArray& fi
                     [dragItem release];
                 }
 
+<<<<<<< HEAD
                 auto* helper = [[NSDraggingSourceHelper alloc] autorelease];
+=======
+                auto* helper = [draggingSourceHelper.createInstance() autorelease];
+>>>>>>> 1d8910610497aea0db13ab759171eed22598ac56
 
                 if (! [view beginDraggingSessionWithItems: dragItems
                                                     event: event
