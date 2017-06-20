@@ -49,6 +49,8 @@ public:
         cleanup();
     }
 
+    Result getFirstError() const { return Result::ok(); }
+
     //==============================================================================
     // Input Stream overrides
     bool isError() const                 { return curl == nullptr || lastError != CURLE_OK; }

@@ -303,11 +303,7 @@ bool DragAndDropContainer::performExternalDragDropOfFiles (const StringArray& fi
                     [dragItem release];
                 }
 
-<<<<<<< HEAD
-                auto* helper = [[NSDraggingSourceHelper alloc] autorelease];
-=======
                 auto* helper = [draggingSourceHelper.createInstance() autorelease];
->>>>>>> 1d8910610497aea0db13ab759171eed22598ac56
 
                 if (! [view beginDraggingSessionWithItems: dragItems
                                                     event: event

@@ -922,6 +922,8 @@ public:
         connection = nullptr;
     }
 
+    Result getFirstError() { return Result::ok(); }
+
     bool connect (WebInputStream::Listener* webInputListener, int numRetries = 0)
     {
         ignoreUnused (numRetries);
