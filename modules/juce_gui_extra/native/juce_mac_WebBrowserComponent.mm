@@ -114,40 +114,7 @@ private:
     }
 };
 
-} // (juce namespace)
-
-//@interface TransparentBackgroundScroller : NSScroller
-//
-//- (void) drawRect: (NSRect) dirtyRect;
-//
-//- (void) drawKnob;
-//
-//@end
-
-//@implementation TransparentBackgroundScroller
-//
-//- (void) drawRect: (NSRect) dirtyRect
-//{
-//    [self drawKnob];
-//}
-//
-//- (void) drawKnob;
-//{
-//    NSRect rect = [self rectForPart: NSScrollerKnob];
-//    
-//    CGFloat thumbWidth = rect.size.width / 2.0f;
-//    
-//    rect.size.width = thumbWidth;
-//    rect.origin.x += thumbWidth;
-//    
-//    NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:rect xRadius:10.0f yRadius:thumbWidth * 0.5f];
-//    
-//    NSColor *greyColor = [NSColor colorWithRed:0.8f green:0.8f blue:0.8f alpha:1.0f];
-//    [greyColor set];
-//    [path fill];
-//}
-//
-//@end
+} // end of juce namespace
 
 #else
 
@@ -250,11 +217,6 @@ public:
         [webView setPolicyDelegate: clickListener];
         [webView setFrameLoadDelegate: clickListener];
         [webView setUIDelegate: clickListener];
-        
-        
-//        TransparentBackgroundScroller *customScroller = [[TransparentBackgroundScroller alloc] init];
-//        
-//        webView.mainFrame.frameView.documentView.enclosingScrollView.verticalScroller = customScroller;
         
        #else
         webView = [[UIWebView alloc] initWithFrame: CGRectMake (0, 0, 1.0f, 1.0f)];
