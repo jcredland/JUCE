@@ -17,7 +17,12 @@
    ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.juce.com for more information.
+   available: visit www.fndef verify
+    #define verify(assertion) __Verify(assertion)
+#endif
+#ifndef verify_noerr
+     #define verify_noerr(errorCode)  __Verify_noErr(errorCode)
+#endifjuce.com for more information.
 
   ==============================================================================
 */
@@ -31,6 +36,19 @@
  #pragma clang diagnostic ignored "-Wunused-parameter"
  #pragma clang diagnostic ignored "-Wunused"
 #endif
+
+// Credland: start import from JUCE 5....
+// From MacOS 10.13 and iOS 11 Apple has (sensibly!) stopped defining a whole
+// set of functions with rather generic names. However, we still need a couple
+// of them to compile the files below.
+#ifndef verify
+ #define verify(assertion) __Verify(assertion)
+#endif
+#ifndef verify_noerr
+ #define verify_noerr(errorCode)  __Verify_noErr(errorCode)
+#endif
+ // ...end
+
 
 #ifdef _MSC_VER
  #pragma warning (push)
@@ -56,6 +74,13 @@
 #include "AU/CoreAudioUtilityClasses/CarbonEventHandler.cpp"
 #include "AU/CoreAudioUtilityClasses/ComponentBase.cpp"
 #include "AU/CoreAudioUtilityClasses/MusicDeviceBase.cpp"
+
+
+// Credland: start import from JUCE 5....
+#undef verify
+#undef verify_noerr
+// ...end
+
 
 #ifdef __clang__
  #pragma clang diagnostic pop
