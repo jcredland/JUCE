@@ -118,6 +118,7 @@ private:
             addMethod (@selector (broadcastMessageCallback:),       broadcastMessageCallback,       "v@:@");
             addMethod (@selector (mainMenuTrackingBegan:),          mainMenuTrackingBegan,          "v@:@");
             addMethod (@selector (mainMenuTrackingEnded:),          mainMenuTrackingEnded,          "v@:@");
+            addMethod (@selector (applicationDidChangeOcclusionState:), applicationDidChangeOcclusionState, "v@:");
             addMethod (@selector (dummyMethod),                     dummyMethod,                    "v@:");
 
             registerClass();
@@ -130,6 +131,21 @@ private:
                                                                andSelector: @selector (getUrl:withReplyEvent:)
                                                              forEventClass: kInternetEventClass
                                                                 andEventID: kAEGetURL];
+        }
+
+        static void applicationDidChangeOcclusionState(NSNotification * notification)
+        {
+            if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
+            {
+                if ([NSApp occlusionState] & NSApplicationOcclusionStateVisible)
+                {
+                    app->resumed();
+                }
+                else
+                {
+                    app->suspended();
+                }
+            }
         }
 
         static NSApplicationTerminateReply applicationShouldTerminate (id /*self*/, SEL, NSApplication*)
