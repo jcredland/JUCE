@@ -250,7 +250,7 @@ private:
         Component* hit = getParentComponent();
 
         if (hit == nullptr)
-            hit = findDesktopComponentBelow (screenPos);
+            hit = Desktop::getInstance ().findComponentAt (screenPos);
         else
             hit = hit->getComponentAt (hit->getLocalPoint (nullptr, screenPos));
 
