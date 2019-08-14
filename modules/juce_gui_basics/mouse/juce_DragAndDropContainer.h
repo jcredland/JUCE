@@ -102,6 +102,8 @@ public:
     */
     var getCurrentDragDescription() const;
 
+	void abandonCurrentDrag();
+
     /** If a drag is in progress, this allows the image being shown to be dynamically updated. */
     void setCurrentDragImage (const Image& newImage);
 

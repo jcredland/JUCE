@@ -383,6 +383,11 @@ DragAndDropContainer::~DragAndDropContainer()
     dragImageComponent = nullptr;
 }
 
+void DragAndDropContainer::abandonCurrentDrag()
+{
+	dragImageComponent = nullptr;
+}
+
 void DragAndDropContainer::startDragging (const var& sourceDescription,
                                           Component* sourceComponent,
                                           Image dragImage,
