@@ -597,6 +597,12 @@ bool DragAndDropContainer::isAlreadyDragging (Component* component) const noexce
 
     return false;
 }
+    
+    void DragAndDropContainer::abandonCurrentDrag()
+    {
+        dragImageComponents.clear();
+    }
+    
 
 //==============================================================================
 DragAndDropTarget::SourceDetails::SourceDetails (const var& desc, Component* comp, Point<int> pos) noexcept
