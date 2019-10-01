@@ -61,6 +61,8 @@ public:
     /** Destructor. */
     virtual ~DragAndDropContainer();
 
+    void abandonCurrentDrag();
+    
     //==============================================================================
     /** Begins a drag-and-drop operation.
 
