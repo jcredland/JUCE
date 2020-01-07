@@ -60,6 +60,13 @@ public:
     /** Destructor. */
     virtual ~DragAndDropContainer();
 
+	/**
+	 * This method can be used to convert an internal drag into an external drag
+	 * When mouseDrag() detects that the cursor is no longer over the app (either because it has moved off or because it has been alt+tabbed)
+	 * Call this and start a performExternalDragDropOfFiles()
+	 *
+	 * The following may be useful to detect if the mouse cursor is on the app: Desktop::getInstance().findComponentAt(e.getScreenPosition()) == nullptr 
+	 */
     void abandonCurrentDrag();
     
     //==============================================================================
