@@ -156,10 +156,20 @@ public:
         {
             auto now = Time::getCurrentTime();
 
-            if (getCurrentlyOver() != nullptr)
+            if (getCurrentlyOver() != nullptr && Process::isForegroundProcess())
+            {
                 lastTimeOverTarget = now;
-            else if (now > lastTimeOverTarget + RelativeTime::milliseconds (700))
-                checkForExternalDrag (details, screenPos);
+            }
+            else if (now > lastTimeOverTarget + RelativeTime::milliseconds(700))
+            {
+                if(getCurrentlyOver() != nullptr && !Process::isForegroundProcess())
+                {
+	                // this is here to detect whether this condition is appropriate in the latest JUCE builds and thus make somewhere for a breakpoint.
+                    DBG("Drag out issue caught - getCurrentlyOver() != nullptr && !Process::isForegroundProcess()");
+                }
+                checkForExternalDrag(details, screenPos);
+            }
+            
         }
 
         forceMouseCursorUpdate();
