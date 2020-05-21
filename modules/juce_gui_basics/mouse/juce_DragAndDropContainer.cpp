@@ -148,6 +148,10 @@ public:
         {
             auto now = Time::getCurrentTime();
 
+        	// before you consider adding something like the below, @see abandonCurrentDrag()
+            // if (getCurrentlyOver() != nullptr && Process::isForegroundProcess())
+        	
+
             if (getCurrentlyOver() != nullptr)
                 lastTimeOverTarget = now;
             else if (now > lastTimeOverTarget + RelativeTime::milliseconds (700))
@@ -590,6 +594,12 @@ bool DragAndDropContainer::isAlreadyDragging (Component* component) const noexce
 
     return false;
 }
+    
+void DragAndDropContainer::abandonCurrentDrag()
+{
+    dragImageComponents.clear();
+}
+    
 
 //==============================================================================
 DragAndDropTarget::SourceDetails::SourceDetails (const var& desc, Component* comp, Point<int> pos) noexcept
