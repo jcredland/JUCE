@@ -313,6 +313,28 @@ bool Viewport::isCurrentlyScrollingOnDrag() const noexcept
     return dragToScrollListener != nullptr && dragToScrollListener->isDragging;
 }
 
+void Viewport::setPlaceScrollbarOverContent(bool shouldPlaceVScrollbarOverContent, bool shouldPlaceHScrollbarOverContent)
+{
+    placeVScrollbarOverContent = shouldPlaceVScrollbarOverContent;
+    placeHScrollbarOverContent = shouldPlaceHScrollbarOverContent;
+}
+
+bool Viewport::isVerticalScrollbarOverContent() const noexcept
+{
+    return placeVScrollbarOverContent;
+}
+
+bool Viewport::isHorizontalScrollbarOverContent() const noexcept
+{
+    return placeHScrollbarOverContent;
+}
+
+void Viewport::sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling) const
+{
+    verticalScrollBar->setHideWhenNotScrolling(shouldHideVScrollbarWhenNotScrolling);
+    horizontalScrollBar->setHideWhenNotScrolling(shouldHideHScrollbarWhenNotScrolling);
+}
+	
 //==============================================================================
 void Viewport::lookAndFeelChanged()
 {
@@ -350,10 +372,10 @@ void Viewport::updateVisibleArea()
             hBarVisible = canShowHBar && (hBarVisible || contentComp->getX() < 0 || contentComp->getRight() > contentArea.getWidth());
             vBarVisible = canShowVBar && (vBarVisible || contentComp->getY() < 0 || contentComp->getBottom() > contentArea.getHeight());
 
-            if (vBarVisible)
+            if (!placeVScrollbarOverContent && vBarVisible)
                 contentArea.setWidth (getWidth() - scrollbarWidth);
 
-            if (hBarVisible)
+            if (!placeHScrollbarOverContent && hBarVisible)
                 contentArea.setHeight (getHeight() - scrollbarWidth);
 
             if (! contentArea.contains (contentComp->getBounds()))
@@ -363,8 +385,8 @@ void Viewport::updateVisibleArea()
             }
         }
 
-        if (vBarVisible)  contentArea.setWidth  (getWidth()  - scrollbarWidth);
-        if (hBarVisible)  contentArea.setHeight (getHeight() - scrollbarWidth);
+        if (!placeVScrollbarOverContent && vBarVisible)  contentArea.setWidth  (getWidth()  - scrollbarWidth);
+        if (!placeHScrollbarOverContent && hBarVisible)  contentArea.setHeight (getHeight() - scrollbarWidth);
 
         if (! vScrollbarRight  && vBarVisible)
             contentArea.setX (scrollbarWidth);
@@ -396,7 +418,11 @@ void Viewport::updateVisibleArea()
     auto& hbar = getHorizontalScrollBar();
     auto& vbar = getVerticalScrollBar();
 
-    hbar.setBounds (contentArea.getX(), hScrollbarBottom ? contentArea.getHeight() : 0, contentArea.getWidth(), scrollbarWidth);
+    if (!placeHScrollbarOverContent)
+        hbar.setBounds(contentArea.getX(), hScrollbarBottom ? contentArea.getHeight() : 0, contentArea.getWidth(), scrollbarWidth);
+    else
+        hbar.setBounds(contentArea.getX(), hScrollbarBottom ? contentArea.getHeight() - scrollbarWidth : 0, contentArea.getWidth(), scrollbarWidth);
+
     hbar.setRangeLimits (0.0, contentBounds.getWidth());
     hbar.setCurrentRange (visibleOrigin.x, contentArea.getWidth());
     hbar.setSingleStepSize (singleStepX);
@@ -404,7 +430,11 @@ void Viewport::updateVisibleArea()
     if (canShowHBar && ! hBarVisible)
         visibleOrigin.setX (0);
 
-    vbar.setBounds (vScrollbarRight ? contentArea.getWidth() : 0, contentArea.getY(), scrollbarWidth, contentArea.getHeight());
+    if (!placeVScrollbarOverContent)
+        vbar.setBounds(vScrollbarRight ? contentArea.getWidth() : 0, contentArea.getY(), scrollbarWidth, contentArea.getHeight());
+    else
+        vbar.setBounds(vScrollbarRight ? contentArea.getWidth() - scrollbarWidth : 0, contentArea.getY(), scrollbarWidth, contentArea.getHeight());
+
     vbar.setRangeLimits (0.0, contentBounds.getHeight());
     vbar.setCurrentRange (visibleOrigin.y, contentArea.getHeight());
     vbar.setSingleStepSize (singleStepY);

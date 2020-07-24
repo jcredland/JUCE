@@ -43,7 +43,7 @@ namespace juce
 */
 class JUCE_API  ScrollBar  : public Component,
                              public AsyncUpdater,
-                             private Timer
+                             private MultiTimer
 {
 public:
     //==============================================================================
@@ -82,6 +82,21 @@ public:
         @see setAutoHide
     */
     bool autoHides() const noexcept;
+
+    /** Tells the scrollbar whether to make itself invisible when not needed.
+
+        The default behaviour is for a scrollbar to become invisible when the thumb
+        fills the whole of its range (i.e. when it can't be moved). Setting this
+        value to false forces the bar to always be visible.
+        @see autoHides()
+    */
+    void setHideWhenNotScrolling(bool shouldHideWhenNotScrolling);
+
+    /** Returns true if this scrollbar is set to auto-hide when its thumb is as big
+        as its maximum range.
+        @see setAutoHide
+    */
+    bool hidesWhenNotScrolling() const noexcept;
 
     //==============================================================================
     /** Sets the minimum and maximum values that the bar will move between.
@@ -409,15 +424,18 @@ private:
     double singleStepSize = 0.1, dragStartRange = 0;
     int thumbAreaStart = 0, thumbAreaSize = 0, thumbStart = 0, thumbSize = 0;
     int dragStartMousePos = 0, lastMousePos = 0;
-    int initialDelayInMillisecs = 100, repeatDelayInMillisecs = 50, minimumDelayInMillisecs = 10;
-    bool vertical, isDraggingThumb = false, autohides = true, userVisibilityFlag = false;
+    int initialDelayInMillisecs = 100, repeatDelayInMillisecs = 50, minimumDelayInMillisecs = 10, hideDelayInMillisecs = 1000;
+    bool vertical, isDraggingThumb = false, autohides = true, userVisibilityFlag = false, hideWhenNotScrolling = false;
     class ScrollbarButton;
     std::unique_ptr<ScrollbarButton> upButton, downButton;
     ListenerList<Listener> listeners;
 
+    const int preExistingTimerId = 1;
+    const int fadeOutTimerId = 2;
+	
     void handleAsyncUpdate() override;
     void updateThumbPosition();
-    void timerCallback() override;
+    void timerCallback (int) override;
     bool getVisibility() const noexcept;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ScrollBar)
