@@ -111,6 +111,12 @@ bool ScrollBar::setCurrentRange (Range<double> newRange, NotificationType notifi
 
 void ScrollBar::setCurrentRange (double newStart, double newSize, NotificationType notification)
 {
+    if (hideWhenNotScrolling)
+    {
+        setVisible(true);
+        startTimer(fadeOutTimerId, 2000);
+    }
+	
     setCurrentRange (Range<double> (newStart, newStart + newSize), notification);
 }
 
@@ -240,6 +246,17 @@ bool ScrollBar::autoHides() const noexcept
     return autohides;
 }
 
+void ScrollBar::setHideWhenNotScrolling(bool shouldHideWhenNotScrolling)
+{
+    hideWhenNotScrolling = shouldHideWhenNotScrolling;
+    updateThumbPosition();
+}
+
+bool ScrollBar::hidesWhenNotScrolling() const noexcept
+{
+    return hideWhenNotScrolling;
+}
+
 //==============================================================================
 void ScrollBar::paint (Graphics& g)
 {
@@ -341,12 +358,12 @@ void ScrollBar::mouseDown (const MouseEvent& e)
     if (dragStartMousePos < thumbStart)
     {
         moveScrollbarInPages (-1);
-        startTimer (400);
+        startTimer (400, preExistingTimerId);
     }
     else if (dragStartMousePos >= thumbStart + thumbSize)
     {
         moveScrollbarInPages (1);
-        startTimer (400);
+        startTimer (400, preExistingTimerId);
     }
     else
     {
@@ -374,7 +391,7 @@ void ScrollBar::mouseDrag (const MouseEvent& e)
 void ScrollBar::mouseUp (const MouseEvent&)
 {
     isDraggingThumb = false;
-    stopTimer();
+    stopTimer(preExistingTimerId);
     repaint();
 }
 
@@ -390,20 +407,29 @@ void ScrollBar::mouseWheelMove (const MouseEvent&, const MouseWheelDetails& whee
     setCurrentRange (visibleRange - singleStepSize * increment);
 }
 
-void ScrollBar::timerCallback()
+void ScrollBar::timerCallback(int timerId)
 {
-    if (isMouseButtonDown())
+    if (timerId == preExistingTimerId)
     {
-        startTimer (40);
+        if (isMouseButtonDown())
+        {
+            startTimer(40, preExistingTimerId);
 
-        if (lastMousePos < thumbStart)
-            setCurrentRange (visibleRange - visibleRange.getLength());
-        else if (lastMousePos > thumbStart + thumbSize)
-            setCurrentRangeStart (visibleRange.getEnd());
+            if (lastMousePos < thumbStart)
+                setCurrentRange(visibleRange - visibleRange.getLength());
+            else if (lastMousePos > thumbStart + thumbSize)
+                setCurrentRangeStart(visibleRange.getEnd());
+        }
+        else
+        {
+            stopTimer(preExistingTimerId);
+        }
     }
-    else
+
+    if (timerId == fadeOutTimerId)
     {
-        stopTimer();
+        stopTimer(fadeOutTimerId);
+        setVisible(false);
     }
 }
 
