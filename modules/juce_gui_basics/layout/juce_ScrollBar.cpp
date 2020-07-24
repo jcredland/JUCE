@@ -114,7 +114,7 @@ void ScrollBar::setCurrentRange (double newStart, double newSize, NotificationTy
     if (hideWhenNotScrolling)
     {
         setVisible(true);
-        startTimer(fadeOutTimerId, 2000);
+        startTimer(fadeOutTimerId, hideDelayInMillisecs);
     }
 	
     setCurrentRange (Range<double> (newStart, newStart + newSize), notification);
