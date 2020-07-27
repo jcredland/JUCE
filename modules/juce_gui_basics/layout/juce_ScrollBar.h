@@ -437,7 +437,7 @@ private:
     std::unique_ptr<ScrollbarButton> upButton, downButton;
     ListenerList<Listener> listeners;
 
-    const int preExistingTimerId = 1;
+    const int clickedOutsideThumbTimerId = 1;
     const int fadeOutTimerId = 2;
 	
     void handleAsyncUpdate() override;
