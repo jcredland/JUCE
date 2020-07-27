@@ -350,12 +350,12 @@ void ScrollBar::mouseDown (const MouseEvent& e)
     if (dragStartMousePos < thumbStart)
     {
         moveScrollbarInPages (-1);
-        startTimer (400, preExistingTimerId);
+        startTimer (preExistingTimerId, 400);
     }
     else if (dragStartMousePos >= thumbStart + thumbSize)
     {
         moveScrollbarInPages (1);
-        startTimer (400, preExistingTimerId);
+        startTimer (preExistingTimerId, 400);
     }
     else
     {
@@ -405,7 +405,7 @@ void ScrollBar::timerCallback(int timerId)
     {
         if (isMouseButtonDown())
         {
-            startTimer(40, preExistingTimerId);
+            startTimer(preExistingTimerId, 40);
 
             if (lastMousePos < thumbStart)
                 setCurrentRange(visibleRange - visibleRange.getLength());
