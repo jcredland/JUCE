@@ -336,10 +336,13 @@ bool Viewport::isHorizontalScrollbarOverContent() const noexcept
     return placeHScrollbarOverContent;
 }
 
-void Viewport::sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling) const
+void Viewport::sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling)
 {
     verticalScrollBar->setHideWhenNotScrolling(shouldHideVScrollbarWhenNotScrolling);
     horizontalScrollBar->setHideWhenNotScrolling(shouldHideHScrollbarWhenNotScrolling);
+
+    allowScrollingWithoutScrollbarV = shouldHideVScrollbarWhenNotScrolling;
+    allowScrollingWithoutScrollbarH = shouldHideHScrollbarWhenNotScrolling;
 }
 	
 //==============================================================================

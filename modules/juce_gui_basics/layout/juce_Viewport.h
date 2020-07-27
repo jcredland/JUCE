@@ -307,7 +307,7 @@ public:
         user is drag-scrolling, you can disable this with the Component::setViewportIgnoreDragFlag()
         method.
     */
-    void sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling) const;
+    void sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling);
 
     //==============================================================================
     /** @internal */

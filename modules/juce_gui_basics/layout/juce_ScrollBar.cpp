@@ -249,7 +249,6 @@ bool ScrollBar::autoHides() const noexcept
 void ScrollBar::setHideWhenNotScrolling(bool shouldHideWhenNotScrolling)
 {
     hideWhenNotScrolling = shouldHideWhenNotScrolling;
-    updateThumbPosition();
 }
 
 bool ScrollBar::hidesWhenNotScrolling() const noexcept
