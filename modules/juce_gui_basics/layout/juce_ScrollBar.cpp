@@ -350,12 +350,12 @@ void ScrollBar::mouseDown (const MouseEvent& e)
     if (dragStartMousePos < thumbStart)
     {
         moveScrollbarInPages (-1);
-        startTimer (preExistingTimerId, 400);
+        startTimer (clickedOutsideThumbTimerId, 400);
     }
     else if (dragStartMousePos >= thumbStart + thumbSize)
     {
         moveScrollbarInPages (1);
-        startTimer (preExistingTimerId, 400);
+        startTimer (clickedOutsideThumbTimerId, 400);
     }
     else
     {
@@ -383,7 +383,7 @@ void ScrollBar::mouseDrag (const MouseEvent& e)
 void ScrollBar::mouseUp (const MouseEvent&)
 {
     isDraggingThumb = false;
-    stopTimer(preExistingTimerId);
+    stopTimer(clickedOutsideThumbTimerId);
     repaint();
 }
 
@@ -401,11 +401,11 @@ void ScrollBar::mouseWheelMove (const MouseEvent&, const MouseWheelDetails& whee
 
 void ScrollBar::timerCallback(int timerId)
 {
-    if (timerId == preExistingTimerId)
+    if (timerId == clickedOutsideThumbTimerId)
     {
         if (isMouseButtonDown())
         {
-            startTimer(preExistingTimerId, 40);
+            startTimer(clickedOutsideThumbTimerId, 40);
 
             if (lastMousePos < thumbStart)
                 setCurrentRange(visibleRange - visibleRange.getLength());
@@ -414,7 +414,7 @@ void ScrollBar::timerCallback(int timerId)
         }
         else
         {
-            stopTimer(preExistingTimerId);
+            stopTimer(clickedOutsideThumbTimerId);
         }
     }
 
