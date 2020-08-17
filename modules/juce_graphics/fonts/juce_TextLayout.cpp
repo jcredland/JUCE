@@ -274,13 +274,8 @@ void TextLayout::createLayout (const AttributedString& text, float maxWidth, flo
     height = maxHeight;
     justification = text.getJustification();
 
-#ifndef JUCE_MAC
-    // createNativeLayout is failing.
     if (! createNativeLayout (text))
         createStandardLayout (text);
-#else
-    createStandardLayout (text);
-#endif
 
     recalculateSize();
 }
