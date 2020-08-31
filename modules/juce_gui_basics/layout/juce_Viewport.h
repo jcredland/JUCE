@@ -287,26 +287,16 @@ public:
     */
     bool isCurrentlyScrollingOnDrag() const noexcept;
 
-    /** Enables or disables drag-to-scroll functionality in the viewport.
-
-        If your viewport contains a Component that you don't want to receive mouse events when the
-        user is drag-scrolling, you can disable this with the Component::setViewportIgnoreDragFlag()
-        method.
-    */
+    /** Enables or disables showing the scrollbar(s) over the content (as opposed to on the side of it) */
     void setPlaceScrollbarOverContent(bool shouldPlaceVScrollbarOverContent, bool shouldPlaceHScrollbarOverContent);
 
-    /** Returns true if drag-to-scroll functionality is enabled. */
+    /** Returns true if the vertical scrollbar displays over the content */
     bool isVerticalScrollbarOverContent() const noexcept;
 
-    /** Returns true if drag-to-scroll functionality is enabled. */
+    /** Returns true if the horizontal scrollbar displays over the content */
     bool isHorizontalScrollbarOverContent() const noexcept;
 
-    /** Enables or disables drag-to-scroll functionality in the viewport.
-
-        If your viewport contains a Component that you don't want to receive mouse events when the
-        user is drag-scrolling, you can disable this with the Component::setViewportIgnoreDragFlag()
-        method.
-    */
+    /** Enables or disables automatic hiding of the scrollbar(s) when scrolling finishes */
     void sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling);
 
     //==============================================================================

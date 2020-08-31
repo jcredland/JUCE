@@ -90,18 +90,17 @@ public:
     */
     bool autoHides() const noexcept;
 
-    /** Tells the scrollbar whether to make itself invisible when not needed.
+    /** Tells the scrollbar whether to hide when scrolling is finished.
 
-        The default behaviour is for a scrollbar to become invisible when the thumb
-        fills the whole of its range (i.e. when it can't be moved). Setting this
-        value to false forces the bar to always be visible.
-        @see autoHides()
+        The default behaviour is that, when visible, the scrollbar stays visible
+        wether the user is currently scrolling or not.
+
+        Setting this to true enables a behaviour where, after scrollingstops,
+        the scrollbar disappears, similarly to the common Mac behaviour.
     */
     void setHideWhenNotScrolling(bool shouldHideWhenNotScrolling);
 
-    /** Returns true if this scrollbar is set to auto-hide when its thumb is as big
-        as its maximum range.
-        @see setAutoHide
+    /** Returns true if the scrollbar is set to auto-hide when scrolling stops.
     */
     bool hidesWhenNotScrolling() const noexcept;
 
