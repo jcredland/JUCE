@@ -100,9 +100,14 @@ public:
     */
     void setHideWhenNotScrolling(bool shouldHideWhenNotScrolling);
 
-    /** Returns true if the scrollbar is set to auto-hide when scrolling stops.
-    */
+    /** Returns true if the scrollbar is set to auto-hide when scrolling stops. */
     bool hidesWhenNotScrolling() const noexcept;
+
+    /** Set the delay between end of scrolling and the scrollbar disappearing
+
+        Default is 1 sec.
+    */
+    void setHideWhenNotScrollingDelayInMs (int newDelayInMs);
 
     //==============================================================================
     /** Sets the minimum and maximum values that the bar will move between.
@@ -430,7 +435,7 @@ private:
     double singleStepSize = 0.1, dragStartRange = 0;
     int thumbAreaStart = 0, thumbAreaSize = 0, thumbStart = 0, thumbSize = 0;
     int dragStartMousePos = 0, lastMousePos = 0;
-    int initialDelayInMillisecs = 100, repeatDelayInMillisecs = 50, minimumDelayInMillisecs = 10, hideDelayInMillisecs = 1000;
+    int initialDelayInMillisecs = 100, repeatDelayInMillisecs = 50, minimumDelayInMillisecs = 10, hideWhenNotScrollingDelayInMs = 1000;
     bool vertical, isDraggingThumb = false, autohides = true, userVisibilityFlag = false, hideWhenNotScrolling = false;
     class ScrollbarButton;
     std::unique_ptr<ScrollbarButton> upButton, downButton;

@@ -114,7 +114,7 @@ void ScrollBar::setCurrentRange (double newStart, double newSize, NotificationTy
     if (hideWhenNotScrolling)
     {
         setVisible(true);
-        startTimer(fadeOutTimerId, hideDelayInMillisecs);
+        startTimer(fadeOutTimerId, hideWhenNotScrollingDelayInMs);
     }
 	
     setCurrentRange (Range<double> (newStart, newStart + newSize), notification);
@@ -254,6 +254,11 @@ void ScrollBar::setHideWhenNotScrolling(bool shouldHideWhenNotScrolling)
 bool ScrollBar::hidesWhenNotScrolling() const noexcept
 {
     return hideWhenNotScrolling;
+}
+
+void ScrollBar::setHideWhenNotScrollingDelayInMs (int newDelayInMs)
+{
+    hideWhenNotScrollingDelayInMs = newDelayInMs;
 }
 
 //==============================================================================
