@@ -346,6 +346,8 @@ private:
     void updateVisibleArea();
     void deleteOrRemoveContentComp();
 
+    Point<int> lastVisibleOrigin;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Viewport)
 };
 

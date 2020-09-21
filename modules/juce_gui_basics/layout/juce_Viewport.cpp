@@ -425,6 +425,11 @@ void Viewport::updateVisibleArea()
 
     auto visibleOrigin = -contentBounds.getPosition();
 
+    auto visibleOriginXChanged = visibleOrigin.getX() != lastVisibleOrigin.getX();
+    auto visibleOriginYChanged = visibleOrigin.getY() != lastVisibleOrigin.getY();
+
+    lastVisibleOrigin = visibleOrigin;
+
     auto& hbar = getHorizontalScrollBar();
     auto& vbar = getVerticalScrollBar();
 
@@ -433,28 +438,35 @@ void Viewport::updateVisibleArea()
     else
         hbar.setBounds(contentArea.getX(), hScrollbarBottom ? contentArea.getHeight() - scrollbarWidth : 0, contentArea.getWidth(), scrollbarWidth);
 
-    hbar.setRangeLimits (0.0, contentBounds.getWidth());
-    hbar.setCurrentRange (visibleOrigin.x, contentArea.getWidth());
-    hbar.setSingleStepSize (singleStepX);
 
-    if (canShowHBar && ! hBarVisible)
-        visibleOrigin.setX (0);
+    if (! allowScrollingWithoutScrollbarH || visibleOriginXChanged)
+    {
+        hbar.setRangeLimits (0.0, contentBounds.getWidth());
+        hbar.setCurrentRange (visibleOrigin.x, contentArea.getWidth());
+        hbar.setSingleStepSize (singleStepX);
+
+        if (canShowHBar && ! hBarVisible)
+            visibleOrigin.setX (0);
+
+        hbar.setVisible (hBarVisible);
+    }
 
     if (!placeVScrollbarOverContent)
         vbar.setBounds(vScrollbarRight ? contentArea.getWidth() : 0, contentArea.getY(), scrollbarWidth, contentArea.getHeight());
     else
         vbar.setBounds(vScrollbarRight ? contentArea.getWidth() - scrollbarWidth : 0, contentArea.getY(), scrollbarWidth, contentArea.getHeight());
 
-    vbar.setRangeLimits (0.0, contentBounds.getHeight());
-    vbar.setCurrentRange (visibleOrigin.y, contentArea.getHeight());
-    vbar.setSingleStepSize (singleStepY);
+    if (! allowScrollingWithoutScrollbarV || visibleOriginYChanged)
+    {
+        vbar.setRangeLimits (0.0, contentBounds.getHeight());
+        vbar.setCurrentRange (visibleOrigin.y, contentArea.getHeight());
+        vbar.setSingleStepSize (singleStepY);
 
-    if (canShowVBar && ! vBarVisible)
-        visibleOrigin.setY (0);
+        if (canShowVBar && ! vBarVisible)
+            visibleOrigin.setY (0);
 
-    // Force the visibility *after* setting the ranges to avoid flicker caused by edge conditions in the numbers.
-    hbar.setVisible (hBarVisible);
-    vbar.setVisible (vBarVisible);
+        vbar.setVisible (vBarVisible);
+    }
 
     if (contentComp != nullptr)
     {
