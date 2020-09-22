@@ -287,18 +287,8 @@ public:
     */
     bool isCurrentlyScrollingOnDrag() const noexcept;
 
-    /** Enables or disables showing the scrollbar(s) over the content (as opposed to on the side of it) */
-    void setPlaceScrollbarOverContent(bool shouldPlaceVScrollbarOverContent, bool shouldPlaceHScrollbarOverContent);
-
-    /** Returns true if the vertical scrollbar displays over the content */
-    bool isVerticalScrollbarOverContent() const noexcept;
-
-    /** Returns true if the horizontal scrollbar displays over the content */
-    bool isHorizontalScrollbarOverContent() const noexcept;
-
-    /** Enables or disables automatic hiding of the scrollbar(s) when scrolling finishes */
-    void sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling);
-
+    /** Enables or disables the nice scrollbar */
+    void setUseNiceScrollbar(bool shouldUseNicerScrollbar);
     //==============================================================================
     /** @internal */
     void resized() override;
@@ -325,6 +315,19 @@ protected:
     virtual ScrollBar* createScrollBarComponent (bool isVertical);
 
 private:
+
+    /** Enables or disables showing the scrollbar(s) over the content (as opposed to on the side of it) */
+    void setPlaceScrollbarOverContent(bool shouldPlaceVScrollbarOverContent, bool shouldPlaceHScrollbarOverContent);
+
+    /** Returns true if the vertical scrollbar displays over the content */
+    bool isVerticalScrollbarOverContent() const noexcept;
+
+    /** Returns true if the horizontal scrollbar displays over the content */
+    bool isHorizontalScrollbarOverContent() const noexcept;
+
+    /** Enables or disables automatic hiding of the scrollbar(s) when scrolling finishes */
+    void sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling);
+
     //==============================================================================
     std::unique_ptr<ScrollBar> verticalScrollBar, horizontalScrollBar;
     Component contentHolder;

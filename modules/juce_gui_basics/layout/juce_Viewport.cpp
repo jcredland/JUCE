@@ -324,6 +324,8 @@ void Viewport::setPlaceScrollbarOverContent(bool shouldPlaceVScrollbarOverConten
 {
     placeVScrollbarOverContent = shouldPlaceVScrollbarOverContent;
     placeHScrollbarOverContent = shouldPlaceHScrollbarOverContent;
+
+    updateVisibleArea();
 }
 
 bool Viewport::isVerticalScrollbarOverContent() const noexcept
@@ -343,6 +345,12 @@ void Viewport::sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNo
 
     allowScrollingWithoutScrollbarV = shouldHideVScrollbarWhenNotScrolling;
     allowScrollingWithoutScrollbarH = shouldHideHScrollbarWhenNotScrolling;
+}
+
+void Viewport::setUseNiceScrollbar(bool shouldUseNicerScrollbar)
+{
+    sethHideScrollbarWhenNotScrolling(shouldUseNicerScrollbar, shouldUseNicerScrollbar);
+    setPlaceScrollbarOverContent(shouldUseNicerScrollbar, shouldUseNicerScrollbar);
 }
 	
 //==============================================================================
@@ -480,8 +488,8 @@ void Viewport::updateVisibleArea()
     }
 
     const Rectangle<int> visibleArea (visibleOrigin.x, visibleOrigin.y,
-                                      jmin (contentBounds.getWidth()  - visibleOrigin.x, contentArea.getWidth()),
-                                      jmin (contentBounds.getHeight() - visibleOrigin.y, contentArea.getHeight()));
+                                      placeVScrollbarOverContent ? contentBounds.getWidth()  - visibleOrigin.x : contentArea.getWidth(),
+                                      placeHScrollbarOverContent ? contentBounds.getHeight() - visibleOrigin.y : contentArea.getHeight());
 
     if (lastVisibleArea != visibleArea)
     {

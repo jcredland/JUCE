@@ -249,6 +249,7 @@ bool ScrollBar::autoHides() const noexcept
 void ScrollBar::setHideWhenNotScrolling(bool shouldHideWhenNotScrolling)
 {
     hideWhenNotScrolling = shouldHideWhenNotScrolling;
+    setVisible (!shouldHideWhenNotScrolling);
 }
 
 bool ScrollBar::hidesWhenNotScrolling() const noexcept
