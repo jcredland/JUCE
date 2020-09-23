@@ -295,6 +295,10 @@ public:
     /** @internal */
     void scrollBarMoved (ScrollBar*, double newRangeStart) override;
     /** @internal */
+    void scrollBarMouseEnter (ScrollBar *) override;
+    /** @internal */
+    void scrollBarFadeoutCompleted (ScrollBar *) override;
+    /** @internal */
     void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&) override;
     /** @internal */
     bool keyPressed (const KeyPress&) override;
@@ -340,6 +344,7 @@ private:
     bool customScrollBarThickness = false;
     bool allowScrollingWithoutScrollbarV = false, allowScrollingWithoutScrollbarH = false;
     bool vScrollbarRight = true, hScrollbarBottom = true;
+    bool vScrollbarMouseOver = false, hScrollbarMouseOver = false;
 
     struct DragToScrollListener;
     std::unique_ptr<DragToScrollListener> dragToScrollListener;

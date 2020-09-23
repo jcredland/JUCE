@@ -371,7 +371,15 @@ void Viewport::resized()
 //==============================================================================
 void Viewport::updateVisibleArea()
 {
+    auto const isMouseOverAnyScrollbar = vScrollbarMouseOver || hScrollbarMouseOver;
+    auto const isScrollbarAutoHiding = allowScrollingWithoutScrollbarV || allowScrollingWithoutScrollbarH;
+
     auto scrollbarWidth = getScrollBarThickness();
+
+    // half size scrollbar when mouse is not over it
+    if (isScrollbarAutoHiding && !isMouseOverAnyScrollbar)
+        scrollbarWidth *= 0.5;
+
     const bool canShowAnyBars = getWidth() > scrollbarWidth && getHeight() > scrollbarWidth;
     const bool canShowHBar = showHScrollbar && canShowAnyBars;
     const bool canShowVBar = showVScrollbar && canShowAnyBars;
@@ -571,6 +579,24 @@ void Viewport::scrollBarMoved (ScrollBar* scrollBarThatHasMoved, double newRange
     {
         setViewPosition (getViewPositionX(), newRangeStartInt);
     }
+}
+
+void Viewport::scrollBarMouseEnter (ScrollBar * s)
+{
+    if (s == horizontalScrollBar.get())
+        hScrollbarMouseOver = true;
+    else if (s == verticalScrollBar.get())
+        vScrollbarMouseOver = true;
+
+    updateVisibleArea();
+};
+
+void Viewport::scrollBarFadeoutCompleted (ScrollBar * s)
+{
+    if (s == horizontalScrollBar.get())
+        hScrollbarMouseOver = false;
+    else if (s == verticalScrollBar.get())
+        vScrollbarMouseOver = false;
 }
 
 void Viewport::mouseWheelMove (const MouseEvent& e, const MouseWheelDetails& wheel)
