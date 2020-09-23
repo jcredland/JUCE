@@ -63,6 +63,10 @@ public:
     ~ScrollBar() override;
 
     //==============================================================================
+    void mouseEnter (const MouseEvent &event) override;
+    void mouseExit (const MouseEvent &event) override;
+
+    //==============================================================================
     /** Returns true if the scrollbar is vertical, false if it's horizontal. */
     bool isVertical() const noexcept                                { return vertical; }
 

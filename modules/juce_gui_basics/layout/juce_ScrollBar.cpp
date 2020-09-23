@@ -111,7 +111,7 @@ bool ScrollBar::setCurrentRange (Range<double> newRange, NotificationType notifi
 
 void ScrollBar::setCurrentRange (double newStart, double newSize, NotificationType notification)
 {
-    if (hideWhenNotScrolling)
+    if (hideWhenNotScrolling && !isMouseOver())
     {
         setVisible(true);
         startTimer(fadeOutTimerId, hideWhenNotScrollingDelayInMs);
@@ -469,6 +469,18 @@ bool ScrollBar::getVisibility() const noexcept
 
     return (! autohides) || (totalRange.getLength() > visibleRange.getLength()
                                     && visibleRange.getLength() > 0.0);
+}
+
+void ScrollBar::mouseEnter(const MouseEvent &event)
+{
+    if (hideWhenNotScrolling)
+        stopTimer (fadeOutTimerId);
+}
+
+void ScrollBar::mouseExit(const MouseEvent &event)
+{
+    if (hideWhenNotScrolling)
+        startTimer (fadeOutTimerId, hideWhenNotScrollingDelayInMs);
 }
 
 } // namespace juce
