@@ -347,10 +347,10 @@ void Viewport::sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNo
     allowScrollingWithoutScrollbarH = shouldHideHScrollbarWhenNotScrolling;
 }
 
-void Viewport::setUseNiceScrollbar(bool shouldUseNicerScrollbar)
+void Viewport::setAlwaysShowScrollbars (bool shouldAlwaysShowScrollbars)
 {
-    sethHideScrollbarWhenNotScrolling(shouldUseNicerScrollbar, shouldUseNicerScrollbar);
-    setPlaceScrollbarOverContent(shouldUseNicerScrollbar, shouldUseNicerScrollbar);
+    sethHideScrollbarWhenNotScrolling (!shouldAlwaysShowScrollbars, !shouldAlwaysShowScrollbars);
+    setPlaceScrollbarOverContent (!shouldAlwaysShowScrollbars, !shouldAlwaysShowScrollbars);
 }
 	
 //==============================================================================

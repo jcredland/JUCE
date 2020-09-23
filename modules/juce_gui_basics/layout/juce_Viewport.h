@@ -288,7 +288,7 @@ public:
     bool isCurrentlyScrollingOnDrag() const noexcept;
 
     /** Enables or disables the nice scrollbar */
-    void setUseNiceScrollbar(bool shouldUseNicerScrollbar);
+    void setAlwaysShowScrollbars (bool shouldAlwaysShowScrollbars);
     //==============================================================================
     /** @internal */
     void resized() override;
