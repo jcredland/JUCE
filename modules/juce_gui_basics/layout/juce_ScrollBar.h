@@ -443,7 +443,7 @@ private:
     double singleStepSize = 0.1, dragStartRange = 0;
     int thumbAreaStart = 0, thumbAreaSize = 0, thumbStart = 0, thumbSize = 0;
     int dragStartMousePos = 0, lastMousePos = 0;
-    int initialDelayInMillisecs = 100, repeatDelayInMillisecs = 50, minimumDelayInMillisecs = 10, hideWhenNotScrollingDelayInMs = 2000;
+    int initialDelayInMillisecs = 100, repeatDelayInMillisecs = 50, minimumDelayInMillisecs = 10, hideWhenNotScrollingDelayInMs = 1800, fadeoutTimeInMs = 200;
     bool vertical, isDraggingThumb = false, autohides = true, userVisibilityFlag = false, hideWhenNotScrolling = false;
     class ScrollbarButton;
     std::unique_ptr<ScrollbarButton> upButton, downButton;

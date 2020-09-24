@@ -113,7 +113,7 @@ void ScrollBar::setCurrentRange (double newStart, double newSize, NotificationTy
 {
     if (hideWhenNotScrolling && !isMouseOver())
     {
-        setVisible(true);
+        setVisible (true);
         startTimer(fadeOutTimerId, hideWhenNotScrollingDelayInMs);
     }
 	
@@ -249,7 +249,7 @@ bool ScrollBar::autoHides() const noexcept
 void ScrollBar::setHideWhenNotScrolling(bool shouldHideWhenNotScrolling)
 {
     hideWhenNotScrolling = shouldHideWhenNotScrolling;
-    setVisible (!shouldHideWhenNotScrolling);
+    setVisible (shouldHideWhenNotScrolling ? false : true);
 }
 
 bool ScrollBar::hidesWhenNotScrolling() const noexcept
@@ -434,10 +434,9 @@ void ScrollBar::timerCallback(int timerId)
     if (timerId == fadeOutTimerId)
     {
         stopTimer(fadeOutTimerId);
-        setVisible(false);
 
-        listeners.call ([=] (Listener& l) {
-            l.scrollBarFadeoutCompleted(this); });
+        Desktop::getInstance().getAnimator().fadeOut (this, fadeoutTimeInMs);
+        listeners.call ([=] (Listener& l) { l.scrollBarFadeoutCompleted (this); });
     }
 }
 
@@ -460,6 +459,7 @@ void ScrollBar::setVisible (bool shouldBeVisible)
 {
     if (userVisibilityFlag != shouldBeVisible)
     {
+        setAlpha (shouldBeVisible ? 1.0f : 0.0f);
         userVisibilityFlag = shouldBeVisible;
         Component::setVisible (getVisibility());
     }
