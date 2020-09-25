@@ -320,20 +320,35 @@ bool Viewport::isCurrentlyScrollingOnDrag() const noexcept
     return dragToScrollListener != nullptr && dragToScrollListener->isDragging;
 }
 
+void Viewport::setPlaceScrollbarOverContent(bool shouldPlaceScrollbarsOverContent)
+{
+    setPlaceScrollbarOverContent (shouldPlaceScrollbarsOverContent,
+                                  shouldPlaceScrollbarsOverContent);
+}
+
 void Viewport::setPlaceScrollbarOverContent(bool shouldPlaceVScrollbarOverContent, bool shouldPlaceHScrollbarOverContent)
 {
     placeVScrollbarOverContent = shouldPlaceVScrollbarOverContent;
     placeHScrollbarOverContent = shouldPlaceHScrollbarOverContent;
 }
 
-bool Viewport::isVerticalScrollbarOverContent() const noexcept
+void Viewport::sethHideScrollbarWhenNotScrolling (bool shouldHideScrollbarsWhenNotScrolling)
 {
-    return placeVScrollbarOverContent;
+    sethHideScrollbarWhenNotScrolling (shouldHideScrollbarsWhenNotScrolling,
+                                       shouldHideScrollbarsWhenNotScrolling);
 }
 
-bool Viewport::isHorizontalScrollbarOverContent() const noexcept
+void Viewport::setTinyScrollbar (bool shouldVerticalScrollbarBeTiny,
+                                 bool shouldHorizontalScrollbarBeTiny)
 {
-    return placeHScrollbarOverContent;
+    tinyVerticalScrollbar   = shouldVerticalScrollbarBeTiny;
+    tinyHorizontalScrollbar = shouldHorizontalScrollbarBeTiny;
+}
+
+void Viewport::setTinyScrollbar (bool shouldScrollbarBeTiny)
+{
+    setTinyScrollbar (shouldScrollbarBeTiny,
+                      shouldScrollbarBeTiny);
 }
 
 void Viewport::sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling)
@@ -349,8 +364,10 @@ void Viewport::sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNo
 
 void Viewport::setAlwaysShowScrollbars (bool shouldAlwaysShowScrollbars)
 {
-    sethHideScrollbarWhenNotScrolling (!shouldAlwaysShowScrollbars, !shouldAlwaysShowScrollbars);
-    setPlaceScrollbarOverContent (!shouldAlwaysShowScrollbars, !shouldAlwaysShowScrollbars);
+    sethHideScrollbarWhenNotScrolling (!shouldAlwaysShowScrollbars);
+    setPlaceScrollbarOverContent (!shouldAlwaysShowScrollbars);
+    setTinyScrollbar(!shouldAlwaysShowScrollbars);
+
     updateVisibleArea();
 }
 	
@@ -374,11 +391,12 @@ void Viewport::updateVisibleArea()
 {
     auto const isMouseOverAnyScrollbar = vScrollbarMouseOver || hScrollbarMouseOver;
     auto const isScrollbarAutoHiding = allowScrollingWithoutScrollbarV || allowScrollingWithoutScrollbarH;
+    auto const tinyScrollbars = tinyVerticalScrollbar || tinyHorizontalScrollbar;
 
     auto scrollbarWidth = getScrollBarThickness();
 
     // half size scrollbar when mouse is not over it
-    if (isScrollbarAutoHiding && !isMouseOverAnyScrollbar)
+    if (tinyScrollbars && !isMouseOverAnyScrollbar)
         scrollbarWidth *= 0.5;
 
     const bool canShowAnyBars = getWidth() > scrollbarWidth && getHeight() > scrollbarWidth;
