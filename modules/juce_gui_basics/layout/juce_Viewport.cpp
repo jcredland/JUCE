@@ -320,55 +320,78 @@ bool Viewport::isCurrentlyScrollingOnDrag() const noexcept
     return dragToScrollListener != nullptr && dragToScrollListener->isDragging;
 }
 
-void Viewport::setPlaceScrollbarOverContent(bool shouldPlaceScrollbarsOverContent)
+void Viewport::setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy newVerticalScrollbarShowPolicy,
+                                       ScrollBar::ScrollbarShowPolicy newHorizontalScrollbarShowPolicy)
 {
-    setPlaceScrollbarOverContent (shouldPlaceScrollbarsOverContent,
-                                  shouldPlaceScrollbarsOverContent);
+    verticalScrollBar->setShowPolicy (newVerticalScrollbarShowPolicy);
+    horizontalScrollBar->setShowPolicy (newHorizontalScrollbarShowPolicy);
 }
 
-void Viewport::setPlaceScrollbarOverContent(bool shouldPlaceVScrollbarOverContent, bool shouldPlaceHScrollbarOverContent)
+void Viewport::setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy newScrollbarShowPolicy)
 {
-    placeVScrollbarOverContent = shouldPlaceVScrollbarOverContent;
-    placeHScrollbarOverContent = shouldPlaceHScrollbarOverContent;
+    setScrollbarShowPolicy (newScrollbarShowPolicy,
+                            newScrollbarShowPolicy);
+
+    // some init tasks depending on the new ShowPolicy
+    switch (newScrollbarShowPolicy)
+    {
+        case ScrollBar::ScrollbarShowPolicy::always:
+            break;
+        case ScrollBar::ScrollbarShowPolicy::duringScrolling:
+            vScrollbarMouseOver             = false;
+            hScrollbarMouseOver             = false;
+            allowScrollingWithoutScrollbarV = true;
+            allowScrollingWithoutScrollbarH = true;
+            break;
+        case ScrollBar::ScrollbarShowPolicy::whenMouseOverViewport:
+            break;
+    }
 }
 
-void Viewport::sethHideScrollbarWhenNotScrolling (bool shouldHideScrollbarsWhenNotScrolling)
+void Viewport::setScrollbarSize (ScrollbarSize newScrollbarSize)
 {
-    sethHideScrollbarWhenNotScrolling (shouldHideScrollbarsWhenNotScrolling,
-                                       shouldHideScrollbarsWhenNotScrolling);
+    verticalScrollbarSize  = newScrollbarSize;
+    horizontalScrollbarSize = newScrollbarSize;
 }
 
-void Viewport::setTinyScrollbar (bool shouldVerticalScrollbarBeTiny,
-                                 bool shouldHorizontalScrollbarBeTiny)
+void Viewport::setScrollbarPlacement (ScrollbarPlacement newScrollbarPlacement)
 {
-    tinyVerticalScrollbar   = shouldVerticalScrollbarBeTiny;
-    tinyHorizontalScrollbar = shouldHorizontalScrollbarBeTiny;
+    verticalScrollbarPlacement  = newScrollbarPlacement;
+    horizontalScrollbarPlacement = newScrollbarPlacement;
 }
 
-void Viewport::setTinyScrollbar (bool shouldScrollbarBeTiny)
+void Viewport::setOsxStyleScrollbars()
 {
-    setTinyScrollbar (shouldScrollbarBeTiny,
-                      shouldScrollbarBeTiny);
-}
-
-void Viewport::sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling)
-{
-    verticalScrollBar->setHideWhenNotScrolling(shouldHideVScrollbarWhenNotScrolling);
-    horizontalScrollBar->setHideWhenNotScrolling(shouldHideHScrollbarWhenNotScrolling);
-
-    vScrollbarMouseOver = hScrollbarMouseOver = false;
-
-    allowScrollingWithoutScrollbarV = shouldHideVScrollbarWhenNotScrolling;
-    allowScrollingWithoutScrollbarH = shouldHideHScrollbarWhenNotScrolling;
-}
-
-void Viewport::setAlwaysShowScrollbars (bool shouldAlwaysShowScrollbars)
-{
-    sethHideScrollbarWhenNotScrolling (!shouldAlwaysShowScrollbars);
-    setPlaceScrollbarOverContent (!shouldAlwaysShowScrollbars);
-    setTinyScrollbar(!shouldAlwaysShowScrollbars);
+    setScrollbarPlacement  (ScrollbarPlacement::overContent);
+    setScrollbarSize       (ScrollbarSize::fullWhenMouseOver);
+    setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy::duringScrolling);
 
     updateVisibleArea();
+}
+
+void Viewport::setClassicStyleScrollbars ()
+{
+    setScrollbarPlacement  (ScrollbarPlacement::nextToContent);
+    setScrollbarSize       (ScrollbarSize::alwaysFull);
+    setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy::always);
+
+    updateVisibleArea();
+}
+
+void Viewport::setScrollbarsStyle (ScrollbarStyle newStyle)
+{
+    switch (newStyle)
+    {
+        case classic:
+            setClassicStyleScrollbars();
+            break;
+        case osx:
+            setOsxStyleScrollbars();
+            break;
+        case hybrid:
+            jassert ("Not implemented Yet");
+            break;
+    }
 }
 	
 //==============================================================================
@@ -390,8 +413,7 @@ void Viewport::resized()
 void Viewport::updateVisibleArea()
 {
     auto const isMouseOverAnyScrollbar = vScrollbarMouseOver || hScrollbarMouseOver;
-    auto const isScrollbarAutoHiding = allowScrollingWithoutScrollbarV || allowScrollingWithoutScrollbarH;
-    auto const tinyScrollbars = tinyVerticalScrollbar || tinyHorizontalScrollbar;
+    auto const tinyScrollbars = verticalScrollbarSize == ScrollbarSize::fullWhenMouseOver || horizontalScrollbarSize == ScrollbarSize::fullWhenMouseOver;
 
     auto scrollbarWidth = getScrollBarThickness();
 
@@ -417,10 +439,10 @@ void Viewport::updateVisibleArea()
             hBarVisible = canShowHBar && (hBarVisible || contentComp->getX() < 0 || contentComp->getRight() > contentArea.getWidth());
             vBarVisible = canShowVBar && (vBarVisible || contentComp->getY() < 0 || contentComp->getBottom() > contentArea.getHeight());
 
-            if (!placeVScrollbarOverContent && vBarVisible)
+            if (!verticalScrollbarPlacement == ScrollbarPlacement::overContent  && vBarVisible)
                 contentArea.setWidth (getWidth() - scrollbarWidth);
 
-            if (!placeHScrollbarOverContent && hBarVisible)
+            if (!horizontalScrollbarPlacement == ScrollbarPlacement::overContent && hBarVisible)
                 contentArea.setHeight (getHeight() - scrollbarWidth);
 
             if (! contentArea.contains (contentComp->getBounds()))
@@ -430,8 +452,8 @@ void Viewport::updateVisibleArea()
             }
         }
 
-        if (!placeVScrollbarOverContent && vBarVisible)  contentArea.setWidth  (getWidth()  - scrollbarWidth);
-        if (!placeHScrollbarOverContent && hBarVisible)  contentArea.setHeight (getHeight() - scrollbarWidth);
+        if (!verticalScrollbarPlacement == ScrollbarPlacement::overContent && vBarVisible)  contentArea.setWidth  (getWidth()  - scrollbarWidth);
+        if (!horizontalScrollbarPlacement == ScrollbarPlacement::overContent && hBarVisible)  contentArea.setHeight (getHeight() - scrollbarWidth);
 
         if (! vScrollbarRight  && vBarVisible)
             contentArea.setX (scrollbarWidth);
@@ -468,7 +490,7 @@ void Viewport::updateVisibleArea()
     auto& hbar = getHorizontalScrollBar();
     auto& vbar = getVerticalScrollBar();
 
-    if (!placeHScrollbarOverContent)
+    if (!horizontalScrollbarPlacement == ScrollbarPlacement::overContent)
         hbar.setBounds(contentArea.getX(), hScrollbarBottom ? contentArea.getHeight() : 0, contentArea.getWidth(), scrollbarWidth);
     else
         hbar.setBounds(contentArea.getX(), hScrollbarBottom ? contentArea.getHeight() - scrollbarWidth : 0, contentArea.getWidth(), scrollbarWidth);
@@ -486,7 +508,7 @@ void Viewport::updateVisibleArea()
         hbar.setVisible (hBarVisible);
     }
 
-    if (!placeVScrollbarOverContent)
+    if (!verticalScrollbarPlacement == ScrollbarPlacement::overContent)
         vbar.setBounds(vScrollbarRight ? contentArea.getWidth() : 0, contentArea.getY(), scrollbarWidth, contentArea.getHeight());
     else
         vbar.setBounds(vScrollbarRight ? contentArea.getWidth() - scrollbarWidth : 0, contentArea.getY(), scrollbarWidth, contentArea.getHeight());
@@ -515,8 +537,8 @@ void Viewport::updateVisibleArea()
     }
 
     const Rectangle<int> visibleArea (visibleOrigin.x, visibleOrigin.y,
-                                      placeVScrollbarOverContent ? contentBounds.getWidth()  - visibleOrigin.x : contentArea.getWidth(),
-                                      placeHScrollbarOverContent ? contentBounds.getHeight() - visibleOrigin.y : contentArea.getHeight());
+            !verticalScrollbarPlacement == ScrollbarPlacement::overContent ? contentBounds.getWidth()  - visibleOrigin.x : contentArea.getWidth(),
+            !horizontalScrollbarPlacement == ScrollbarPlacement::overContent ? contentBounds.getHeight() - visibleOrigin.y : contentArea.getHeight());
 
     if (lastVisibleArea != visibleArea)
     {

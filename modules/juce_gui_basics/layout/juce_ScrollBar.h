@@ -94,24 +94,23 @@ public:
     */
     bool autoHides() const noexcept;
 
-    /** Tells the scrollbar whether to hide when scrolling is finished.
-
-        The default behaviour is that, when visible, the scrollbar stays visible
-        wether the user is currently scrolling or not.
-
-        Setting this to true enables a behaviour where, after scrollingstops,
-        the scrollbar disappears, similarly to the common Mac behaviour.
-    */
-    void setHideWhenNotScrolling(bool shouldHideWhenNotScrolling);
-
-    /** Returns true if the scrollbar is set to auto-hide when scrolling stops. */
-    bool hidesWhenNotScrolling() const noexcept;
-
     /** Set the delay between end of scrolling and the scrollbar disappearing
 
         Default is 1 sec.
     */
     void setHideWhenNotScrollingDelayInMs (int newDelayInMs);
+
+    enum ScrollbarShowPolicy
+    {
+        always,
+        duringScrolling,
+        whenMouseOverViewport
+    };
+
+    void setShowPolicy (ScrollbarShowPolicy newVerticalScrollbarShowPolicy,
+                        ScrollbarShowPolicy newHorizontalScrollbarShowPolicy);
+
+    void setShowPolicy (ScrollBar::ScrollbarShowPolicy newScrollbarShowPolicy);
 
     //==============================================================================
     /** Sets the minimum and maximum values that the bar will move between.
@@ -444,10 +443,12 @@ private:
     int thumbAreaStart = 0, thumbAreaSize = 0, thumbStart = 0, thumbSize = 0;
     int dragStartMousePos = 0, lastMousePos = 0;
     int initialDelayInMillisecs = 100, repeatDelayInMillisecs = 50, minimumDelayInMillisecs = 10, hideWhenNotScrollingDelayInMs = 1800, fadeoutTimeInMs = 200;
-    bool vertical, isDraggingThumb = false, autohides = true, userVisibilityFlag = false, hideWhenNotScrolling = false;
+    bool vertical, isDraggingThumb = false, autohides = true, userVisibilityFlag = false;
     class ScrollbarButton;
     std::unique_ptr<ScrollbarButton> upButton, downButton;
     ListenerList<Listener> listeners;
+
+    ScrollbarShowPolicy showPolicy = ScrollbarShowPolicy::always;
 
     const int clickedOutsideThumbTimerId = 1;
     const int fadeOutTimerId = 2;

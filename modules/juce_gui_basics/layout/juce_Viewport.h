@@ -288,7 +288,31 @@ public:
     bool isCurrentlyScrollingOnDrag() const noexcept;
 
     /** Enables or disables the nice scrollbar */
-    void setAlwaysShowScrollbars (bool shouldAlwaysShowScrollbars);
+    void setOsxStyleScrollbars ();
+    void setClassicStyleScrollbars ();
+
+    // TODO: should be private I guess?
+    enum ScrollbarPlacement
+    {
+        overContent,
+        nextToContent
+    };
+
+    // TODO: should be private I guess?
+    enum ScrollbarSize
+    {
+        alwaysFull,
+        fullWhenMouseOver
+    };
+
+    enum ScrollbarStyle
+    {
+        classic,
+        osx,
+        hybrid
+    };
+
+    void setScrollbarsStyle (ScrollbarStyle newStyle);
     //==============================================================================
     /** @internal */
     void resized() override;
@@ -320,16 +344,13 @@ protected:
 
 private:
 
-    /** Enables or disables showing the scrollbar(s) over the content (as opposed to on the side of it) */
-    void setPlaceScrollbarOverContent(bool shouldPlaceVScrollbarOverContent, bool shouldPlaceHScrollbarOverContent);
-    void setPlaceScrollbarOverContent(bool shouldPlaceScrollbarsOverContent);
+    void setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy verticalScrollbarShowPolicy,
+                                 ScrollBar::ScrollbarShowPolicy horizontalScrollbarShowPolicy);
 
-    /** Enables or disables automatic hiding of the scrollbar(s) when scrolling finishes */
-    void sethHideScrollbarWhenNotScrolling(bool shouldHideVScrollbarWhenNotScrolling, bool shouldHideHScrollbarWhenNotScrolling);
-    void sethHideScrollbarWhenNotScrolling(bool shouldHideScrollbarsWhenNotScrolling);
+    void setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy scrollbarShowPolicy);
 
-    void setTinyScrollbar (bool, bool);
-    void setTinyScrollbar (bool);
+    void setScrollbarSize (ScrollbarSize newScrollbarSize);
+    void setScrollbarPlacement (ScrollbarPlacement newScrollbarPlacement);
 
     //==============================================================================
     std::unique_ptr<ScrollBar> verticalScrollBar, horizontalScrollBar;
@@ -339,8 +360,6 @@ private:
     int scrollBarThickness = 0;
     int singleStepX = 16, singleStepY = 16;
     bool showHScrollbar = true, showVScrollbar = true, deleteContent = true;
-    bool placeVScrollbarOverContent = false, placeHScrollbarOverContent = false;
-    bool tinyVerticalScrollbar = false, tinyHorizontalScrollbar = false;
     bool customScrollBarThickness = false;
     bool allowScrollingWithoutScrollbarV = false, allowScrollingWithoutScrollbarH = false;
     bool vScrollbarRight = true, hScrollbarBottom = true;
@@ -355,6 +374,12 @@ private:
     void deleteOrRemoveContentComp();
 
     Point<int> lastVisibleOrigin;
+
+    ScrollbarSize verticalScrollbarSize   = ScrollbarSize::alwaysFull;
+    ScrollbarSize horizontalScrollbarSize = ScrollbarSize::alwaysFull;
+
+    ScrollbarPlacement verticalScrollbarPlacement   = ScrollbarPlacement::nextToContent;
+    ScrollbarPlacement horizontalScrollbarPlacement = ScrollbarPlacement::nextToContent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Viewport)
 };

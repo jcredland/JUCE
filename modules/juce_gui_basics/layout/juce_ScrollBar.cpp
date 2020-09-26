@@ -111,7 +111,7 @@ bool ScrollBar::setCurrentRange (Range<double> newRange, NotificationType notifi
 
 void ScrollBar::setCurrentRange (double newStart, double newSize, NotificationType notification)
 {
-    if (hideWhenNotScrolling && !isMouseOver())
+    if (showPolicy == ScrollbarShowPolicy::duringScrolling && !isMouseOver())
     {
         setVisible (true);
         startTimer(fadeOutTimerId, hideWhenNotScrollingDelayInMs);
@@ -246,21 +246,29 @@ bool ScrollBar::autoHides() const noexcept
     return autohides;
 }
 
-void ScrollBar::setHideWhenNotScrolling(bool shouldHideWhenNotScrolling)
-{
-    hideWhenNotScrolling = shouldHideWhenNotScrolling;
-    setVisible (shouldHideWhenNotScrolling ? false : true);
-}
-
-bool ScrollBar::hidesWhenNotScrolling() const noexcept
-{
-    return hideWhenNotScrolling;
-}
-
 void ScrollBar::setHideWhenNotScrollingDelayInMs (int newDelayInMs)
 {
     hideWhenNotScrollingDelayInMs = newDelayInMs;
 }
+
+void ScrollBar::setShowPolicy (ScrollbarShowPolicy newScrollbarShowPolicy)
+{
+    showPolicy = newScrollbarShowPolicy;
+
+    // some init tasks depending on the new ShowPolicy
+    switch (showPolicy)
+    {
+        case ScrollbarShowPolicy::always:
+            setVisible (true);
+            break;
+        case ScrollbarShowPolicy::duringScrolling:
+            setVisible (false);
+            break;
+        case ScrollbarShowPolicy::whenMouseOverViewport:
+            break;
+    }
+}
+
 
 //==============================================================================
 void ScrollBar::paint (Graphics& g)
@@ -476,7 +484,7 @@ bool ScrollBar::getVisibility() const noexcept
 
 void ScrollBar::mouseEnter(const MouseEvent &event)
 {
-    if (hideWhenNotScrolling)
+    if (showPolicy == ScrollbarShowPolicy::duringScrolling)
         stopTimer (fadeOutTimerId);
 
     listeners.call ([=] (Listener& l) { l.scrollBarMouseEnter (this); });
@@ -484,7 +492,7 @@ void ScrollBar::mouseEnter(const MouseEvent &event)
 
 void ScrollBar::mouseExit(const MouseEvent &event)
 {
-    if (hideWhenNotScrolling)
+    if (showPolicy == ScrollbarShowPolicy::duringScrolling)
         startTimer (fadeOutTimerId, hideWhenNotScrollingDelayInMs);
 
     listeners.call ([=] (Listener& l) { l.scrollBarMouseExit (this); });
