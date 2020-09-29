@@ -107,10 +107,12 @@ public:
         whenMouseOverViewport
     };
 
-    void setShowPolicy (ScrollbarShowPolicy newVerticalScrollbarShowPolicy,
-                        ScrollbarShowPolicy newHorizontalScrollbarShowPolicy);
-
     void setShowPolicy (ScrollBar::ScrollbarShowPolicy newScrollbarShowPolicy);
+
+    ScrollBar::ScrollbarShowPolicy getShowPolicy()
+    {
+        return showPolicy;
+    }
 
     //==============================================================================
     /** Sets the minimum and maximum values that the bar will move between.

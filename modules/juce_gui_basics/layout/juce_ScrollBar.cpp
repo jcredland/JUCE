@@ -254,19 +254,6 @@ void ScrollBar::setHideWhenNotScrollingDelayInMs (int newDelayInMs)
 void ScrollBar::setShowPolicy (ScrollbarShowPolicy newScrollbarShowPolicy)
 {
     showPolicy = newScrollbarShowPolicy;
-
-    // some init tasks depending on the new ShowPolicy
-    switch (showPolicy)
-    {
-        case ScrollbarShowPolicy::always:
-            setVisible (true);
-            break;
-        case ScrollbarShowPolicy::duringScrolling:
-            setVisible (false);
-            break;
-        case ScrollbarShowPolicy::whenMouseOverViewport:
-            break;
-    }
 }
 
 

@@ -287,10 +287,6 @@ public:
     */
     bool isCurrentlyScrollingOnDrag() const noexcept;
 
-    /** Enables or disables the nice scrollbar */
-    void setOsxStyleScrollbars ();
-    void setClassicStyleScrollbars ();
-
     // TODO: should be private I guess?
     enum ScrollbarPlacement
     {
@@ -299,10 +295,11 @@ public:
     };
 
     // TODO: should be private I guess?
-    enum ScrollbarSize
+    enum ShowFullSizeScrollbar
     {
-        alwaysFull,
-        fullWhenMouseOver
+        always,
+        fromMouseEnterToFadeOut,
+        fromMouseEnterToMouseExit
     };
 
     enum ScrollbarStyle
@@ -320,6 +317,8 @@ public:
     void scrollBarMoved (ScrollBar*, double newRangeStart) override;
     /** @internal */
     void scrollBarMouseEnter (ScrollBar *) override;
+    /** @internal */
+    void scrollBarMouseExit (ScrollBar *) override;
     /** @internal */
     void scrollBarFadeoutCompleted (ScrollBar *) override;
     /** @internal */
@@ -343,14 +342,19 @@ protected:
     virtual ScrollBar* createScrollBarComponent (bool isVertical);
 
 private:
+    //==============================================================================
+    void setOsxStyleScrollbars ();
+    void setClassicStyleScrollbars ();
+    void setHybridStyleScrollbars ();
 
-    void setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy verticalScrollbarShowPolicy,
-                                 ScrollBar::ScrollbarShowPolicy horizontalScrollbarShowPolicy);
-
-    void setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy scrollbarShowPolicy);
-
-    void setScrollbarSize (ScrollbarSize newScrollbarSize);
+    //==============================================================================
+    void setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy newScrollbarShowPolicy);
+    void setShowFullSizeScrollbar (ShowFullSizeScrollbar newShowFullSizeScrollbar);
     void setScrollbarPlacement (ScrollbarPlacement newScrollbarPlacement);
+
+    //==============================================================================
+    void mouseEnter (const MouseEvent &event) override;
+    void mouseExit (const MouseEvent &event) override;
 
     //==============================================================================
     std::unique_ptr<ScrollBar> verticalScrollBar, horizontalScrollBar;
@@ -364,6 +368,8 @@ private:
     bool allowScrollingWithoutScrollbarV = false, allowScrollingWithoutScrollbarH = false;
     bool vScrollbarRight = true, hScrollbarBottom = true;
     bool vScrollbarMouseOver = false, hScrollbarMouseOver = false;
+    ShowFullSizeScrollbar showFullSizeScrollbar = ShowFullSizeScrollbar::always;
+    ScrollbarPlacement scrollbarPlacement = ScrollbarPlacement::nextToContent;
 
     struct DragToScrollListener;
     std::unique_ptr<DragToScrollListener> dragToScrollListener;
@@ -374,12 +380,6 @@ private:
     void deleteOrRemoveContentComp();
 
     Point<int> lastVisibleOrigin;
-
-    ScrollbarSize verticalScrollbarSize   = ScrollbarSize::alwaysFull;
-    ScrollbarSize horizontalScrollbarSize = ScrollbarSize::alwaysFull;
-
-    ScrollbarPlacement verticalScrollbarPlacement   = ScrollbarPlacement::nextToContent;
-    ScrollbarPlacement horizontalScrollbarPlacement = ScrollbarPlacement::nextToContent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Viewport)
 };
