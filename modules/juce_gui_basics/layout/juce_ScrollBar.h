@@ -100,18 +100,18 @@ public:
     */
     void setHideWhenNotScrollingDelayInMs (int newDelayInMs);
 
-    enum ScrollbarShowPolicy
+    enum MakeScrollbarVisible
     {
         always,
         duringScrolling,
         whenMouseOverViewport
     };
 
-    void setShowPolicy (ScrollBar::ScrollbarShowPolicy newScrollbarShowPolicy);
+    void setMakeScrollbarVisible (ScrollBar::MakeScrollbarVisible newScrollbarShowPolicy);
 
-    ScrollBar::ScrollbarShowPolicy getShowPolicy()
+    ScrollBar::MakeScrollbarVisible getMakeScrollbarVisible()
     {
-        return showPolicy;
+        return makeScrollbarVisible;
     }
 
     //==============================================================================
@@ -450,7 +450,7 @@ private:
     std::unique_ptr<ScrollbarButton> upButton, downButton;
     ListenerList<Listener> listeners;
 
-    ScrollbarShowPolicy showPolicy = ScrollbarShowPolicy::always;
+    MakeScrollbarVisible makeScrollbarVisible = MakeScrollbarVisible::always;
 
     const int clickedOutsideThumbTimerId = 1;
     const int fadeOutTimerId = 2;

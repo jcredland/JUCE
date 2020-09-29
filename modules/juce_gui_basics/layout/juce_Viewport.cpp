@@ -323,33 +323,17 @@ bool Viewport::isCurrentlyScrollingOnDrag() const noexcept
     return dragToScrollListener != nullptr && dragToScrollListener->isDragging;
 }
 
-void Viewport::setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy newScrollbarShowPolicy)
+void Viewport::setMakeScrollbarVisible (ScrollBar::MakeScrollbarVisible shouldScrollbarBeMadeVisible)
 {
-    verticalScrollBar->setShowPolicy (newScrollbarShowPolicy);
-    horizontalScrollBar->setShowPolicy (newScrollbarShowPolicy);
+    makeScrollbarVisible = shouldScrollbarBeMadeVisible;
 
-    // some init tasks depending on the new ShowPolicy
-    switch (newScrollbarShowPolicy)
-    {
-        case ScrollBar::ScrollbarShowPolicy::always:
-            setScrollBarsShown(true, true);
-            break;
-        case ScrollBar::ScrollbarShowPolicy::duringScrolling:
-            setScrollBarsShown (true, true, true, true);
-            horizontalScrollBar->setVisible (false);
-            verticalScrollBar->setVisible (false);
-            vScrollbarMouseOver = false;
-            hScrollbarMouseOver = false;
-            break;
-        case ScrollBar::ScrollbarShowPolicy::whenMouseOverViewport:
-            setScrollBarsShown(false, false);
-            break;
-    }
+    verticalScrollBar->setMakeScrollbarVisible (makeScrollbarVisible);
+    horizontalScrollBar->setMakeScrollbarVisible (makeScrollbarVisible);
 }
 
-void Viewport::setShowFullSizeScrollbar (ShowFullSizeScrollbar newShowFullSizeScrollbar)
+void Viewport::setMakeScrollbarFullSize (MakeScrollbarFullSize newMakeScrollbarFullSize)
 {
-    showFullSizeScrollbar = newShowFullSizeScrollbar;
+    makeScrollbarFullSize = newMakeScrollbarFullSize;
 }
 
 void Viewport::setScrollbarPlacement (ScrollbarPlacement newScrollbarPlacement)
@@ -359,14 +343,7 @@ void Viewport::setScrollbarPlacement (ScrollbarPlacement newScrollbarPlacement)
 
 void Viewport::mouseEnter (const MouseEvent &event)
 {
-    auto& hbar = getHorizontalScrollBar();
-    auto& vbar = getVerticalScrollBar();
-
-    const auto hbarShowPolicy = hbar.getShowPolicy();
-    const auto vbarShowPolicy = vbar.getShowPolicy();
-
-    if (hbarShowPolicy != ScrollBar::ScrollbarShowPolicy::whenMouseOverViewport &&
-            vbarShowPolicy != ScrollBar::ScrollbarShowPolicy::whenMouseOverViewport)
+    if (makeScrollbarVisible != ScrollBar::MakeScrollbarVisible::whenMouseOverViewport)
         return;
 
     setScrollBarsShown(true, true);
@@ -374,14 +351,7 @@ void Viewport::mouseEnter (const MouseEvent &event)
 
 void Viewport::mouseExit (const MouseEvent &event)
 {
-    auto& hbar = getHorizontalScrollBar();
-    auto& vbar = getVerticalScrollBar();
-
-    const auto hbarShowPolicy = hbar.getShowPolicy();
-    const auto vbarShowPolicy = vbar.getShowPolicy();
-
-    if (hbarShowPolicy != ScrollBar::ScrollbarShowPolicy::whenMouseOverViewport &&
-        vbarShowPolicy != ScrollBar::ScrollbarShowPolicy::whenMouseOverViewport)
+    if (makeScrollbarVisible != ScrollBar::MakeScrollbarVisible::whenMouseOverViewport)
         return;
 
     setScrollBarsShown(false, false);
@@ -391,24 +361,37 @@ void Viewport::mouseExit (const MouseEvent &event)
 void Viewport::setOsxStyleScrollbars()
 {
     setScrollbarPlacement  (ScrollbarPlacement::overContent);
-    setShowFullSizeScrollbar (ShowFullSizeScrollbar::fromMouseEnterToFadeOut);
-    setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy::duringScrolling);
+    setMakeScrollbarFullSize (MakeScrollbarFullSize::fromMouseEnterToFadeOut);
+    setMakeScrollbarVisible (ScrollBar::MakeScrollbarVisible::duringScrolling);
+
+    setScrollBarsShown (true, true, true, true);
+    horizontalScrollBar->setVisible (false);
+    verticalScrollBar->setVisible (false);
+    vScrollbarMouseOver = false;
+    hScrollbarMouseOver = false;
+
     updateVisibleArea();
 }
 
 void Viewport::setClassicStyleScrollbars ()
 {
     setScrollbarPlacement (ScrollbarPlacement::nextToContent);
-    setShowFullSizeScrollbar(ShowFullSizeScrollbar::always);
-    setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy::always);
+    setMakeScrollbarFullSize (MakeScrollbarFullSize::always);
+    setMakeScrollbarVisible (ScrollBar::MakeScrollbarVisible::always);
+
+    setScrollBarsShown(true, true);
+
     updateVisibleArea();
 }
 
 void Viewport::setHybridStyleScrollbars ()
 {
     setScrollbarPlacement (ScrollbarPlacement::overContent);
-    setShowFullSizeScrollbar (ShowFullSizeScrollbar::fromMouseEnterToMouseExit);
-    setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy::whenMouseOverViewport);
+    setMakeScrollbarFullSize (MakeScrollbarFullSize::fromMouseEnterToMouseExit);
+    setMakeScrollbarVisible (ScrollBar::MakeScrollbarVisible::whenMouseOverViewport);
+
+    setScrollBarsShown(false, false);
+
     updateVisibleArea();
 }
 
@@ -446,7 +429,7 @@ void Viewport::resized()
 //==============================================================================
 void Viewport::updateVisibleArea()
 {
-    auto const tinyScrollbars = showFullSizeScrollbar != ShowFullSizeScrollbar::always;
+    auto const tinyScrollbars = makeScrollbarFullSize != MakeScrollbarFullSize::always;
 
     auto vScrollbarWidth = getScrollBarThickness();
     auto hScrollbarWidth = getScrollBarThickness();
@@ -680,7 +663,7 @@ void Viewport::scrollBarMouseEnter (ScrollBar * s)
 void Viewport::scrollBarMouseExit (ScrollBar * s)
 {
     const auto shouldMinimiseScrollbar =
-        showFullSizeScrollbar == ShowFullSizeScrollbar::fromMouseEnterToMouseExit;
+        makeScrollbarFullSize == MakeScrollbarFullSize::fromMouseEnterToMouseExit;
 
     if (! shouldMinimiseScrollbar)
         return;

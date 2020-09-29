@@ -111,7 +111,7 @@ bool ScrollBar::setCurrentRange (Range<double> newRange, NotificationType notifi
 
 void ScrollBar::setCurrentRange (double newStart, double newSize, NotificationType notification)
 {
-    if (showPolicy == ScrollbarShowPolicy::duringScrolling && !isMouseOver())
+    if (makeScrollbarVisible == MakeScrollbarVisible::duringScrolling && !isMouseOver())
     {
         setVisible (true);
         startTimer(fadeOutTimerId, hideWhenNotScrollingDelayInMs);
@@ -251,9 +251,9 @@ void ScrollBar::setHideWhenNotScrollingDelayInMs (int newDelayInMs)
     hideWhenNotScrollingDelayInMs = newDelayInMs;
 }
 
-void ScrollBar::setShowPolicy (ScrollbarShowPolicy newScrollbarShowPolicy)
+void ScrollBar::setMakeScrollbarVisible (MakeScrollbarVisible newScrollbarShowPolicy)
 {
-    showPolicy = newScrollbarShowPolicy;
+    makeScrollbarVisible = newScrollbarShowPolicy;
 }
 
 
@@ -471,7 +471,7 @@ bool ScrollBar::getVisibility() const noexcept
 
 void ScrollBar::mouseEnter(const MouseEvent &event)
 {
-    if (showPolicy == ScrollbarShowPolicy::duringScrolling)
+    if (makeScrollbarVisible == MakeScrollbarVisible::duringScrolling)
         stopTimer (fadeOutTimerId);
 
     listeners.call ([=] (Listener& l) { l.scrollBarMouseEnter (this); });
@@ -479,7 +479,7 @@ void ScrollBar::mouseEnter(const MouseEvent &event)
 
 void ScrollBar::mouseExit(const MouseEvent &event)
 {
-    if (showPolicy == ScrollbarShowPolicy::duringScrolling)
+    if (makeScrollbarVisible == MakeScrollbarVisible::duringScrolling)
         startTimer (fadeOutTimerId, hideWhenNotScrollingDelayInMs);
 
     listeners.call ([=] (Listener& l) { l.scrollBarMouseExit (this); });

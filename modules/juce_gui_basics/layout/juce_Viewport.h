@@ -287,15 +287,13 @@ public:
     */
     bool isCurrentlyScrollingOnDrag() const noexcept;
 
-    // TODO: should be private I guess?
     enum ScrollbarPlacement
     {
         overContent,
         nextToContent
     };
 
-    // TODO: should be private I guess?
-    enum ShowFullSizeScrollbar
+    enum MakeScrollbarFullSize
     {
         always,
         fromMouseEnterToFadeOut,
@@ -348,8 +346,8 @@ private:
     void setHybridStyleScrollbars ();
 
     //==============================================================================
-    void setScrollbarShowPolicy (ScrollBar::ScrollbarShowPolicy newScrollbarShowPolicy);
-    void setShowFullSizeScrollbar (ShowFullSizeScrollbar newShowFullSizeScrollbar);
+    void setMakeScrollbarVisible (ScrollBar::MakeScrollbarVisible shouldScrollbarBeMadeVisible);
+    void setMakeScrollbarFullSize (MakeScrollbarFullSize newMakeScrollbarFullSize);
     void setScrollbarPlacement (ScrollbarPlacement newScrollbarPlacement);
 
     //==============================================================================
@@ -368,8 +366,9 @@ private:
     bool allowScrollingWithoutScrollbarV = false, allowScrollingWithoutScrollbarH = false;
     bool vScrollbarRight = true, hScrollbarBottom = true;
     bool vScrollbarMouseOver = false, hScrollbarMouseOver = false;
-    ShowFullSizeScrollbar showFullSizeScrollbar = ShowFullSizeScrollbar::always;
+    MakeScrollbarFullSize makeScrollbarFullSize = MakeScrollbarFullSize::always;
     ScrollbarPlacement scrollbarPlacement = ScrollbarPlacement::nextToContent;
+    ScrollBar::MakeScrollbarVisible makeScrollbarVisible = ScrollBar::MakeScrollbarVisible::always;
 
     struct DragToScrollListener;
     std::unique_ptr<DragToScrollListener> dragToScrollListener;
