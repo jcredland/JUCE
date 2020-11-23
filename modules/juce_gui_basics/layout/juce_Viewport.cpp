@@ -563,10 +563,9 @@ void Viewport::updateVisibleArea()
         }
     }
 
-    const Rectangle<int> visibleArea (visibleOrigin.x, visibleOrigin.y,
-            scrollbarPlacement == ScrollbarPlacement::nextToContent ? contentBounds.getWidth()  - visibleOrigin.x : contentArea.getWidth(),
-            scrollbarPlacement == ScrollbarPlacement::nextToContent ? contentBounds.getHeight() - visibleOrigin.y : contentArea.getHeight());
-
+    const Rectangle<int> visibleArea (visibleOrigin.x, visibleOrigin.y,  
+        jmin (contentBounds.getWidth() - visibleOrigin.x, contentArea.getWidth()),  
+        jmin (contentBounds.getHeight() - visibleOrigin.y, contentArea.getHeight()));
 
     if (lastVisibleArea != visibleArea)
     {
