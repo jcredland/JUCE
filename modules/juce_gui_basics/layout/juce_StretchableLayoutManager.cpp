@@ -148,7 +148,9 @@ void StretchableLayoutManager::layOutComponents (Component** const components,
                                                  const bool resizeOtherDimension)
 {
     setTotalSize (vertically ? h : w);
-    int pos = vertically ? y : x;
+    int offset = vertically ? y : x;
+    int pos{0};
+    //= vertically ? y : x;
 
     for (int i = 0; i < numComponents; ++i)
     {
@@ -162,16 +164,16 @@ void StretchableLayoutManager::layOutComponents (Component** const components,
                     if (resizeOtherDimension)
                     {
                         if (vertically)
-                            c->setBounds (x, pos, w, jmax (layout->currentSize, h - pos));
+                            c->setBounds (x, pos+offset, w, jmax (layout->currentSize, h - pos));
                         else
-                            c->setBounds (pos, y, jmax (layout->currentSize, w - pos), h);
+                            c->setBounds (pos + offset, y, jmax (layout->currentSize, w - pos), h);
                     }
                     else
                     {
                         if (vertically)
-                            c->setBounds (c->getX(), pos, c->getWidth(), jmax (layout->currentSize, h - pos));
+                            c->setBounds (c->getX(), pos + offset, c->getWidth(), jmax (layout->currentSize, h - pos));
                         else
-                            c->setBounds (pos, c->getY(), jmax (layout->currentSize, w - pos), c->getHeight());
+                            c->setBounds (pos + offset, c->getY(), jmax (layout->currentSize, w - pos), c->getHeight());
                     }
                 }
                 else
@@ -179,16 +181,16 @@ void StretchableLayoutManager::layOutComponents (Component** const components,
                     if (resizeOtherDimension)
                     {
                         if (vertically)
-                            c->setBounds (x, pos, w, layout->currentSize);
+                            c->setBounds (x, pos + offset, w, layout->currentSize);
                         else
-                            c->setBounds (pos, y, layout->currentSize, h);
+                            c->setBounds (pos + offset, y, layout->currentSize, h);
                     }
                     else
                     {
                         if (vertically)
-                            c->setBounds (c->getX(), pos, c->getWidth(), layout->currentSize);
+                            c->setBounds (c->getX(), pos + offset, c->getWidth(), layout->currentSize);
                         else
-                            c->setBounds (pos, c->getY(), layout->currentSize, c->getHeight());
+                            c->setBounds (pos + offset, c->getY(), layout->currentSize, c->getHeight());
                     }
                 }
             }
