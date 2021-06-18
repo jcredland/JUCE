@@ -436,10 +436,10 @@ void Viewport::updateVisibleArea()
 
     // half size scrollbar when mouse is not over it
     if (tinyScrollbars && !vScrollbarMouseOver)
-        vScrollbarWidth *= 0.5;
+        vScrollbarWidth /= 2;
 
     if (tinyScrollbars && !hScrollbarMouseOver)
-        hScrollbarWidth *= 0.5;
+        hScrollbarWidth /= 2;
 
     const bool canShowAnyBars = getWidth() > vScrollbarWidth && getHeight() > hScrollbarWidth;
     const bool canShowHBar = showHScrollbar && canShowAnyBars;
